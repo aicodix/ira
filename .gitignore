@@ -1,0 +1,7 @@
+work
+*.o
+*_tb
+*.vcd
+*.gtkw
+soft_*.txt
+.*.swp
