@@ -30,6 +30,7 @@ architecture rtl of dec_vector is
 	signal bnl_wpos, bnl_rpos : location_scalar;
 	signal bnl_isgn, bnl_osgn : sgn_vector;
 	signal bnl_imag, bnl_omag : mag_vector;
+	signal first_wdf : boolean;
 	signal wdf_wren : boolean := false;
 	signal wdf_wpos, wdf_rpos : location_scalar;
 	signal wdf_iwdf, wdf_owdf : boolean;
@@ -300,6 +301,18 @@ begin
 
 			inp_stage3 <= inp_stage2;
 			if inp_stage3 and not cnp_busy then
+				if inp_d3num = 1 then
+					first_wdf <= inp_d1wdf;
+				elsif inp_d3num /= 0 then
+					wdf_wren <= true;
+					wdf_wpos <= inp_d4loc;
+					if inp_d2off = inp_d1off then
+						wdf_iwdf <= inp_d1wdf;
+					else
+						wdf_iwdf <= first_wdf;
+						first_wdf <= inp_d1wdf;
+					end if;
+				end if;
 				inp_d4num <= inp_d3num;
 				inp_d4cnt <= inp_d3cnt;
 				inp_d4seq <= inp_d3seq;
@@ -311,6 +324,9 @@ begin
 
 			inp_stage4 <= inp_stage3;
 			if inp_stage4 and not cnp_busy then
+				if inp_d4num = inp_d4cnt then
+					wdf_wren <= false;
+				end if;
 				rol_shift <= inp_d2shi;
 				rol_isoft <= var_ovar;
 				inp_d5num <= inp_d4num;

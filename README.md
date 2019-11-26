@@ -16,7 +16,6 @@ Run ```make vcd``` to generate waveforms and watch them via ```gtkwave dec_vecto
 
 ### TODO
 
-* Write disable flags to resolve write conflicts with DDSMs
 * Reference decoder in C++
 * Tool for generating code table entries
 * Tool for enforcing below rules for code table entries
@@ -26,6 +25,8 @@ Run ```make vcd``` to generate waveforms and watch them via ```gtkwave dec_vecto
 * Can the interface be improved?
 
 ### DONE
+
+* Write disable flags to resolve write conflicts with DDSMs
 
 ### [ldpc.vhd](ldpc.vhd)
 
