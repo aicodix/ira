@@ -60,7 +60,7 @@ architecture rtl of dec_vector is
 	signal inp_pty : natural range 0 to parities_max;
 	signal prev_start, swap_d1start, swap_d2start : boolean := false;
 	signal inp_seq, out_seq : sequence_scalar;
-	signal inp_stage0, inp_stage1, inp_stage2, inp_stage3, inp_stage4, inp_stage5, inp_stage6 : boolean := false;
+	signal inp_stage0, inp_stage1, inp_stage2, inp_stage3, inp_stage4, inp_stage5, inp_stage6, inp_stage7 : boolean := false;
 	signal swap_stage0, swap_stage1, swap_stage2, swap_stage3 : boolean := false;
 	signal swap_d1soft, swap_d2soft : soft_scalar;
 	signal swap_pos, swap_d1pos : natural range 0 to code_vectors-1;
@@ -69,17 +69,17 @@ architecture rtl of dec_vector is
 	signal inp_cnt, out_cnt : count_scalar := degree_max;
 	signal inp_loc : location_scalar;
 	signal inp_tmp, out_tmp : soft_vector;
-	signal out_stage0, out_stage1, out_stage2, out_stage3 : boolean := false;
-	signal out_d1off, out_d2off : offset_scalar;
+	signal out_stage0, out_stage1, out_stage2, out_stage3, out_stage4 : boolean := false;
+	signal out_d1off, out_d2off, out_d3off : offset_scalar;
 	signal out_d1shi : shift_scalar;
-	signal out_d1wdf, out_d2wdf : boolean;
-	signal inp_d1num, inp_d2num, inp_d3num, inp_d4num, inp_d5num, inp_d6num : natural range 0 to degree_max;
-	signal inp_d1cnt, inp_d2cnt, inp_d3cnt, inp_d4cnt, inp_d5cnt, inp_d6cnt : count_scalar;
-	signal inp_d1seq, inp_d2seq, inp_d3seq, inp_d4seq, inp_d5seq, inp_d6seq : sequence_scalar;
-	signal inp_d1loc, inp_d2loc, inp_d3loc, inp_d4loc, inp_d5loc, inp_d6loc : location_scalar;
-	signal inp_d1wdf, inp_d2wdf, inp_d3wdf, inp_d4wdf : boolean;
-	signal inp_d1off, inp_d2off, inp_d3off, inp_d4off : offset_scalar;
-	signal inp_d1shi, inp_d2shi, inp_d3shi, inp_d4shi : shift_scalar;
+	signal out_d1wdf, out_d2wdf, out_d3wdf : boolean;
+	signal inp_d1num, inp_d2num, inp_d3num, inp_d4num, inp_d5num, inp_d6num, inp_d7num : natural range 0 to degree_max;
+	signal inp_d1cnt, inp_d2cnt, inp_d3cnt, inp_d4cnt, inp_d5cnt, inp_d6cnt, inp_d7cnt : count_scalar;
+	signal inp_d1seq, inp_d2seq, inp_d3seq, inp_d4seq, inp_d5seq, inp_d6seq, inp_d7seq : sequence_scalar;
+	signal inp_d1loc, inp_d2loc, inp_d3loc, inp_d4loc, inp_d5loc, inp_d6loc, inp_d7loc : location_scalar;
+	signal inp_d1wdf, inp_d2wdf, inp_d3wdf, inp_d4wdf, inp_d5wdf : boolean;
+	signal inp_d1off, inp_d2off, inp_d3off, inp_d4off, inp_d5off : offset_scalar;
+	signal inp_d1shi, inp_d2shi, inp_d3shi, inp_d4shi, inp_d5shi : shift_scalar;
 
 	function add (val : soft_vector; sgn : sgn_vector; mag : mag_vector) return soft_vector is
 		variable tmp : soft_vector;
@@ -142,11 +142,11 @@ begin
 			cnp_ishi, cnp_oshi);
 
 	rol_inst : entity work.rol_vector
-		port map (rol_shift,
+		port map (clock, rol_shift,
 			rol_isoft, rol_osoft);
 
 	ror_inst : entity work.ror_vector
-		port map (ror_shift,
+		port map (clock, ror_shift,
 			ror_isoft, ror_osoft);
 
 	process (clock)
@@ -313,7 +313,6 @@ begin
 			if inp_stage4 and not cnp_busy then
 				rol_shift <= inp_d2shi;
 				rol_isoft <= var_ovar;
-				bnl_rpos <= inp_d4loc;
 				inp_d5num <= inp_d4num;
 				inp_d5cnt <= inp_d4cnt;
 				inp_d5seq <= inp_d4seq;
@@ -325,12 +324,7 @@ begin
 
 			inp_stage5 <= inp_stage4;
 			if inp_stage5 and not cnp_busy then
-				if inp_d3off = code_vectors-1 and inp_d3shi = 1 then
-					prev_val <= rol_osoft(0);
-					inp_tmp <= 127 & rol_osoft(1 to rol_osoft'high);
-				else
-					inp_tmp <= rol_osoft;
-				end if;
+				bnl_rpos <= inp_d5loc;
 				inp_d6num <= inp_d5num;
 				inp_d6cnt <= inp_d5cnt;
 				inp_d6seq <= inp_d5seq;
@@ -342,18 +336,35 @@ begin
 
 			inp_stage6 <= inp_stage5;
 			if inp_stage6 and not cnp_busy then
-				cnp_istart <= inp_d6num = 0;
-				cnp_icount <= inp_d6cnt;
-				if inp_d6seq = 0 then
+				if inp_d4off = code_vectors-1 and inp_d4shi = 1 then
+					prev_val <= rol_osoft(0);
+					inp_tmp <= 127 & rol_osoft(1 to rol_osoft'high);
+				else
+					inp_tmp <= rol_osoft;
+				end if;
+				inp_d7num <= inp_d6num;
+				inp_d7cnt <= inp_d6cnt;
+				inp_d7seq <= inp_d6seq;
+				inp_d7loc <= inp_d6loc;
+				inp_d5wdf <= inp_d4wdf;
+				inp_d5off <= inp_d4off;
+				inp_d5shi <= inp_d4shi;
+			end if;
+
+			inp_stage7 <= inp_stage6;
+			if inp_stage7 and not cnp_busy then
+				cnp_istart <= inp_d7num = 0;
+				cnp_icount <= inp_d7cnt;
+				if inp_d7seq = 0 then
 					cnp_isft <= inp_tmp;
 				else
 					cnp_isft <= add(inp_tmp, not bnl_osgn, bnl_omag);
 				end if;
-				cnp_iseq <= inp_d6seq;
-				cnp_iloc <= inp_d6loc;
-				cnp_iwdf <= inp_d4wdf;
-				cnp_ioff <= inp_d4off;
-				cnp_ishi <= inp_d4shi;
+				cnp_iseq <= inp_d7seq;
+				cnp_iloc <= inp_d7loc;
+				cnp_iwdf <= inp_d5wdf;
+				cnp_ioff <= inp_d5off;
+				cnp_ishi <= inp_d5shi;
 			end if;
 
 --			report boolean'image(cnp_istart) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_icount) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & integer'image(cnp_ishi) & HT & boolean'image(cnp_iwdf) & HT &
@@ -407,15 +418,21 @@ begin
 
 			out_stage2 <= out_stage1;
 			if out_stage2 then
-				var_ivar <= ror_osoft;
-				var_wpos <= out_d2off;
-				var_wren <= not out_d2wdf;
+				out_d3off <= out_d2off;
+				out_d3wdf <= out_d2wdf;
 			end if;
 
 			out_stage3 <= out_stage2;
-			if out_stage3 and not out_stage2 then
+			if out_stage3 then
+				var_ivar <= ror_osoft;
+				var_wpos <= out_d3off;
+				var_wren <= not out_d3wdf;
+			end if;
+
+			out_stage4 <= out_stage3;
+			if out_stage4 and not out_stage3 then
 				var_wren <= false;
-				if not inp_stage6 then
+				if not inp_stage7 then
 					busy <= false;
 				end if;
 			end if;
