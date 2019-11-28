@@ -58,6 +58,23 @@ begin
 		end if;
 	end process;
 
+	counter : process (reset, clock)
+		variable num : natural;
+	begin
+		if reset = '1' then
+			num := 0;
+		elsif rising_edge(clock) then
+			if dec_istart then
+				if num >= code_scalars then
+					report natural'image(num) & " clock cycles";
+				end if;
+				num := 0;
+			else
+				num := num + 1;
+			end if;
+		end if;
+	end process;
+
 	soft_input : process (reset, clock)
 		file input : text open read_mode is "soft_input.txt";
 		variable buf : line;
