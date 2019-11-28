@@ -354,7 +354,7 @@ begin
 			if inp_stage6 and not cnp_busy then
 				if inp_d4off = code_vectors-1 and inp_d4shi = 1 then
 					prev_val <= rol_osoft(0);
-					inp_tmp <= 127 & rol_osoft(1 to rol_osoft'high);
+					inp_tmp <= soft_scalar'high & rol_osoft(1 to rol_osoft'high);
 				else
 					inp_tmp <= rol_osoft;
 				end if;
