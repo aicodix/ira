@@ -9,11 +9,10 @@ use work.ldpc.all;
 entity cnp_vector is
 	port (
 		clock : in std_logic;
+		start : in boolean;
+		count : in count_scalar;
 		busy : out boolean := false;
-		istart : in boolean;
-		ostart : out boolean := false;
-		icount : in count_scalar;
-		ocount : out count_scalar;
+		valid : out boolean := false;
 		iseq : in sequence_scalar;
 		oseq : out sequence_scalar;
 		isft : in soft_vector;
@@ -38,9 +37,9 @@ architecture rtl of cnp_vector is
 	signal num : num_scalar := num_scalar'high;
 	signal isgn : sgn_vector;
 	signal imag : mag_vector;
-	signal count, prev : count_scalar;
+	signal this_count, prev_count : count_scalar;
 	signal seq : sequence_scalar;
-	signal start : boolean := false;
+	signal this_start, prev_start : boolean := false;
 	signal okay : boolean := true;
 	signal shorter : boolean;
 	signal finalize : boolean;
@@ -150,25 +149,25 @@ begin
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;
 	oshi <= buf_oshi;
-	finalize <= false when not start else num = prev when shorter else num = count;
+	finalize <= false when not this_start else num = prev_count when shorter else num = this_count;
 
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if istart or finalize then
+			if start or finalize then
 				num <= 0;
+				valid <= false;
 				buf_wren <= false;
-				ostart <= start;
-				start <= istart;
-				prev <= count;
-				ocount <= count;
+				prev_start <= this_start;
+				this_start <= start;
+				prev_count <= this_count;
 				oseq <= seq;
 				seq <= iseq;
-				if istart then
-					count <= icount;
-					shorter <= icount < count;
+				if start then
+					this_count <= count;
+					shorter <= count < this_count;
 				else
-					count <= count_scalar'low;
+					this_count <= count_scalar'low;
 					shorter <= true;
 					busy <= true;
 				end if;
@@ -180,22 +179,26 @@ begin
 				ipty <= (others => false);
 			elsif num /= num_scalar'high then
 				num <= num + 1;
-				ostart <= false;
 				if shorter then
-					if num = prev-2 then
+					if num = prev_count-2 then
 						busy <= false;
-					elsif num = count-2 then
+					elsif num = this_count-2 then
 						busy <= true;
 					end if;
-					if num = prev-1 then
+					if num = prev_count-1 then
 						okay <= true;
-					elsif num = count-1 then
+					elsif num = this_count-1 then
 						okay <= false;
 					end if;
 				end if;
 				if okay then
 					two_min(imag, imin0, imin1);
 					ipty <= ipty xor isgn;
+				end if;
+				if num = 0 then
+					valid <= prev_start;
+				elsif num = prev_count then
+					valid <= false;
 				end if;
 				buf_wren <= true;
 				buf_addr <= num;
@@ -207,6 +210,7 @@ begin
 				buf_ioff <= ioff;
 				buf_ishi <= ishi;
 			else
+				valid <= false;
 				buf_wren <= false;
 			end if;
 		end if;

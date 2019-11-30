@@ -44,10 +44,9 @@ architecture rtl of dec_vector is
 	signal cnt_wren : boolean := false;
 	signal cnt_wpos, cnt_rpos : natural range 0 to parities_max-1;
 	signal cnt_icnt, cnt_ocnt : count_scalar;
-	signal cnp_busy : boolean;
-	signal cnp_istart : boolean := false;
-	signal cnp_ostart : boolean;
-	signal cnp_icount, cnp_ocount : count_scalar;
+	signal cnp_start : boolean := false;
+	signal cnp_count : count_scalar;
+	signal cnp_busy, cnp_valid : boolean;
 	signal cnp_iseq, cnp_oseq : sequence_scalar;
 	signal cnp_isft, cnp_osft : soft_vector;
 	signal cnp_osgn : sgn_vector;
@@ -81,10 +80,9 @@ architecture rtl of dec_vector is
 	signal swap_pos, swap_dpos : natural range 0 to code_vectors-1;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal inp_num : num_scalar := 0;
-	signal out_num : num_scalar := degree_max;
-	signal inp_cnt, out_cnt : count_scalar := degree_max;
+	signal inp_cnt : count_scalar := degree_max;
 	signal inp_loc : location_scalar;
-	type out_stages is array (0 to 5) of boolean;
+	type out_stages is array (1 to 5) of boolean;
 	signal out_stage : out_stages := (others => false);
 	type out_off_delays is array (1 to 4) of offset_scalar;
 	signal out_off_d : out_off_delays;
@@ -135,9 +133,9 @@ begin
 			bnl_imag, bnl_omag);
 
 	cnp_inst : entity work.cnp_vector
-		port map (clock, cnp_busy,
-			cnp_istart, cnp_ostart,
-			cnp_icount, cnp_ocount,
+		port map (clock,
+			cnp_start, cnp_count,
+			cnp_busy, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_isft, cnp_osft,
 			cnp_osgn, cnp_omag,
@@ -406,8 +404,8 @@ begin
 
 			inp_stage(8) <= inp_stage(7);
 			if inp_stage(8) and not cnp_busy then
-				cnp_istart <= inp_num_d(8) = 0;
-				cnp_icount <= inp_cnt_d(8);
+				cnp_start <= inp_num_d(8) = 0;
+				cnp_count <= inp_cnt_d(8);
 				cnp_isft <= sub_osft;
 				cnp_iseq <= inp_seq_d(8);
 				cnp_iloc <= inp_loc_d(8);
@@ -416,26 +414,15 @@ begin
 				cnp_ishi <= inp_shi_d(6);
 			end if;
 
---			report boolean'image(cnp_istart) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_icount) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & integer'image(cnp_ishi) & HT & boolean'image(cnp_iwdf) & HT &
+--			report boolean'image(cnp_start) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & integer'image(cnp_ishi) & HT & boolean'image(cnp_iwdf) & HT & integer'image(cnp_count) & HT &
 --				integer'image(cnp_isft(0)) & HT & integer'image(cnp_isft(1)) & HT & integer'image(cnp_isft(2)) & HT & integer'image(cnp_isft(3)) & HT & integer'image(cnp_isft(4));
 
---			report boolean'image(cnp_ostart) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_ocount) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT & integer'image(cnp_oshi) & HT & boolean'image(cnp_owdf) & HT &
+--			report boolean'image(cnp_valid) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT & integer'image(cnp_oshi) & HT & boolean'image(cnp_owdf) & HT &
 --				integer'image(cnp_osft(0)) & HT & integer'image(cnp_osft(1)) & HT & integer'image(cnp_osft(2)) & HT & integer'image(cnp_osft(3)) & HT & integer'image(cnp_osft(4)) & HT &
 --				boolean'image(cnp_osgn(0)) & HT & boolean'image(cnp_osgn(1)) & HT & boolean'image(cnp_osgn(2)) & HT & boolean'image(cnp_osgn(3)) & HT & boolean'image(cnp_osgn(4)) & HT &
 --				integer'image(cnp_omag(0)) & HT & integer'image(cnp_omag(1)) & HT & integer'image(cnp_omag(2)) & HT & integer'image(cnp_omag(3)) & HT & integer'image(cnp_omag(4));
 
-			if cnp_ostart then
-				out_num <= 0;
-				out_cnt <= cnp_ocount;
-				out_stage(0) <= true;
-			elsif out_num < out_cnt then
-				out_num <= out_num + 1;
-				if out_num+1 = out_cnt then
-					out_stage(0) <= false;
-				end if;
-			end if;
-
-			if out_stage(0) then
+			if cnp_valid then
 				add_isft <= cnp_osft;
 				add_isgn <= cnp_osgn;
 				add_imag <= cnp_omag;
@@ -455,7 +442,7 @@ begin
 				bnl_wren <= false;
 			end if;
 
-			out_stage(1) <= out_stage(0);
+			out_stage(1) <= cnp_valid;
 			if out_stage(1) then
 				out_off_d(2) <= out_off_d(1);
 				out_shi_d(2) <= out_shi_d(1);
