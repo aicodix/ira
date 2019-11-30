@@ -9,6 +9,7 @@ use work.ldpc.all;
 entity ror_vector is
 	port (
 		clock : in std_logic;
+		clken : in boolean;
 		shift : in natural range 0 to soft_vector'length-1;
 		isoft : in soft_vector;
 		osoft : out soft_vector
@@ -34,7 +35,9 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			osoft <= rotate_right(isoft, shift);
+			if clken then
+				osoft <= rotate_right(isoft, shift);
+			end if;
 		end if;
 	end process;
 end rtl;

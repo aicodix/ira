@@ -11,6 +11,7 @@ entity var_vector is
 	port (
 		clock : in std_logic;
 		wren : in boolean;
+		rden : in boolean;
 		wpos : in natural range 0 to code_vectors-1;
 		rpos : in natural range 0 to code_vectors-1;
 		ivar : in soft_vector;
@@ -31,9 +32,11 @@ begin
 					vars(idx)(wpos) <= ivar(idx);
 				end loop;
 			end if;
-			for idx in ovar'range loop
-				ovar(idx) <= vars(idx)(rpos);
-			end loop;
+			if rden then
+				for idx in ovar'range loop
+					ovar(idx) <= vars(idx)(rpos);
+				end loop;
+			end if;
 		end if;
 	end process;
 end rtl;

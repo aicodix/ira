@@ -11,6 +11,7 @@ entity bnl_vector is
 	port (
 		clock : in std_logic;
 		wren : in boolean;
+		rden : in boolean;
 		wpos : in location_scalar;
 		rpos : in location_scalar;
 		isgn : in sgn_vector;
@@ -39,12 +40,14 @@ begin
 					mags(idx)(wpos) <= imag(idx);
 				end loop;
 			end if;
-			for idx in osgn'range loop
-				osgn(idx) <= sgns(idx)(rpos);
-			end loop;
-			for idx in omag'range loop
-				omag(idx) <= mags(idx)(rpos);
-			end loop;
+			if rden then
+				for idx in osgn'range loop
+					osgn(idx) <= sgns(idx)(rpos);
+				end loop;
+				for idx in omag'range loop
+					omag(idx) <= mags(idx)(rpos);
+				end loop;
+			end if;
 		end if;
 	end process;
 end rtl;

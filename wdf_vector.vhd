@@ -11,6 +11,7 @@ entity wdf_vector is
 	port (
 		clock : in std_logic;
 		wren : in boolean;
+		rden : in boolean;
 		wpos : in location_scalar;
 		rpos : in location_scalar;
 		iwdf : in boolean;
@@ -28,7 +29,9 @@ begin
 			if wren then
 				wdfs(wpos) <= iwdf;
 			end if;
-			owdf <= wdfs(rpos);
+			if rden then
+				owdf <= wdfs(rpos);
+			end if;
 		end if;
 	end process;
 end rtl;

@@ -11,6 +11,7 @@ entity loc_vector is
 	port (
 		clock : in std_logic;
 		wren : in boolean;
+		rden : in boolean;
 		wpos : in location_scalar;
 		rpos : in location_scalar;
 		ioff : in offset_scalar;
@@ -31,8 +32,10 @@ begin
 				offs(wpos) <= ioff;
 				shis(wpos) <= ishi;
 			end if;
-			ooff <= offs(rpos);
-			oshi <= shis(rpos);
+			if rden then
+				ooff <= offs(rpos);
+				oshi <= shis(rpos);
+			end if;
 		end if;
 	end process;
 end rtl;

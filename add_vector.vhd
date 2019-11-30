@@ -9,6 +9,7 @@ use work.ldpc.all;
 entity add_vector is
 	port (
 		clock : in std_logic;
+		clken : in boolean;
 		isft : in soft_vector;
 		isgn : in sgn_vector;
 		imag : in mag_vector;
@@ -47,7 +48,9 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			osft <= add(isft, isgn, imag);
+			if clken then
+				osft <= add(isft, isgn, imag);
+			end if;
 		end if;
 	end process;
 end rtl;

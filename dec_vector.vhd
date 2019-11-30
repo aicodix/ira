@@ -26,18 +26,18 @@ architecture rtl of dec_vector is
 	type swap_vs_delays is array (1 to 2) of vector_index;
 	signal swap_vs_d : swap_vs_delays;
 	signal prev_val : soft_scalar;
-	signal var_wren : boolean := false;
+	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
 	signal var_ivar, var_ovar : soft_vector;
-	signal bnl_wren : boolean := false;
+	signal bnl_wren, bnl_rden : boolean := false;
 	signal bnl_wpos, bnl_rpos : location_scalar;
 	signal bnl_isgn, bnl_osgn : sgn_vector;
 	signal bnl_imag, bnl_omag : mag_vector;
 	signal first_wdf : boolean;
-	signal wdf_wren : boolean := false;
+	signal wdf_wren, wdf_rden : boolean := false;
 	signal wdf_wpos, wdf_rpos : location_scalar;
 	signal wdf_iwdf, wdf_owdf : boolean;
-	signal loc_wren : boolean := false;
+	signal loc_wren, loc_rden : boolean := false;
 	signal loc_wpos, loc_rpos : location_scalar;
 	signal loc_ioff, loc_ooff : offset_scalar;
 	signal loc_ishi, loc_oshi : shift_scalar;
@@ -55,10 +55,12 @@ architecture rtl of dec_vector is
 	signal cnp_iloc, cnp_oloc : location_scalar;
 	signal cnp_ioff, cnp_ooff : offset_scalar;
 	signal cnp_ishi, cnp_oshi : shift_scalar;
+	signal rol_clken : boolean;
 	signal rol_shift : natural range 0 to soft_vector'length-1;
 	signal rol_isoft, rol_osoft : soft_vector;
 	signal ror_shift : natural range 0 to soft_vector'length-1;
 	signal ror_isoft, ror_osoft : soft_vector;
+	signal sub_clken : boolean;
 	signal sub_isft, sub_osft : soft_vector;
 	signal sub_isgn, not_sub_isgn : sgn_vector;
 	signal sub_imag : mag_vector;
@@ -105,19 +107,25 @@ architecture rtl of dec_vector is
 	type inp_shi_delays is array (1 to 6) of shift_scalar;
 	signal inp_shi_d : inp_shi_delays;
 begin
+	loc_rden <= not cnp_busy;
 	loc_inst : entity work.loc_vector
-		port map (clock, loc_wren,
+		port map (clock,
+			loc_wren, loc_rden,
 			loc_wpos, loc_rpos,
 			loc_ioff, loc_ooff,
 			loc_ishi, loc_oshi);
 
+	wdf_rden <= not cnp_busy;
 	wdf_inst : entity work.wdf_vector
-		port map (clock, wdf_wren,
+		port map (clock,
+			wdf_wren, wdf_rden,
 			wdf_wpos, wdf_rpos,
 			wdf_iwdf, wdf_owdf);
 
+	var_rden <= not cnp_busy;
 	var_inst : entity work.var_vector
-		port map (clock, var_wren,
+		port map (clock,
+			var_wren, var_rden,
 			var_wpos, var_rpos,
 			var_ivar, var_ovar);
 
@@ -126,8 +134,10 @@ begin
 			cnt_wpos, cnt_rpos,
 			cnt_icnt, cnt_ocnt);
 
+	bnl_rden <= not cnp_busy;
 	bnl_inst : entity work.bnl_vector
-		port map (clock, bnl_wren,
+		port map (clock,
+			bnl_wren, bnl_rden,
 			bnl_wpos, bnl_rpos,
 			bnl_isgn, bnl_osgn,
 			bnl_imag, bnl_omag);
@@ -144,24 +154,28 @@ begin
 			cnp_ioff, cnp_ooff,
 			cnp_ishi, cnp_oshi);
 
+	rol_clken <= not cnp_busy;
 	rol_inst : entity work.rol_vector
-		port map (clock, rol_shift,
+		port map (clock, rol_clken,
+			rol_shift,
 			rol_isoft, rol_osoft);
 
 	ror_inst : entity work.ror_vector
-		port map (clock, ror_shift,
+		port map (clock, true,
+			ror_shift,
 			ror_isoft, ror_osoft);
 
+	sub_clken <= not cnp_busy;
 	not_sub_isgn <= not sub_isgn;
 	sub_inst : entity work.add_vector
-		port map (clock,
+		port map (clock, sub_clken,
 			sub_isft,
 			not_sub_isgn,
 			sub_imag,
 			sub_osft);
 
 	add_inst : entity work.add_vector
-		port map (clock,
+		port map (clock, true,
 			add_isft,
 			add_isgn,
 			add_imag,
