@@ -342,7 +342,8 @@ begin
 			inp_stage(4) <= inp_stage(3);
 			if inp_stage(4) and not cnp_busy then
 				if inp_num_d(4) = inp_cnt_d(4) then
-					wdf_wren <= false;
+					wdf_wpos <= inp_loc_d(4);
+					wdf_iwdf <= first_wdf;
 				end if;
 				rol_shift <= inp_shi_d(2);
 				rol_isoft <= var_ovar;
@@ -358,6 +359,9 @@ begin
 
 			inp_stage(5) <= inp_stage(4);
 			if inp_stage(5) and not cnp_busy then
+				if inp_num_d(5) = inp_cnt_d(5) then
+					wdf_wren <= false;
+				end if;
 				inp_num_d(6) <= inp_num_d(5);
 				inp_cnt_d(6) <= inp_cnt_d(5);
 				inp_seq_d(6) <= inp_seq_d(5);

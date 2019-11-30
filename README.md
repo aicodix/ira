@@ -39,7 +39,6 @@ Transformed DVB T2 B7 code table for vector length of 15
 The following rules must apply to the table for the decoder to work correctly:
 
 * Rows containing DDSMs must keep locations with same offset consecutive.
-* Last column shall not have a location that is part of a DDSM.
 * Order of location offsets must avoid data hazards caused by the pipeline.
 * Optional: Keep same count rows consecutive to avoid pipeline stalls.
 
