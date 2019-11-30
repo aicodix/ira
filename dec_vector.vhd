@@ -21,7 +21,10 @@ end dec_vector;
 architecture rtl of dec_vector is
 	signal swap_cb : natural range 0 to code_blocks := code_blocks;
 	signal swap_bv : natural range 0 to block_vectors-1;
-	signal swap_vs, swap_d1vs, swap_d2vs : natural range 0 to vector_scalars-1;
+	subtype vector_index is natural range 0 to vector_scalars-1;
+	signal swap_vs : vector_index;
+	type swap_vs_delays is array (1 to 2) of vector_index;
+	signal swap_vs_d : swap_vs_delays;
 	signal prev_val : soft_scalar;
 	signal var_wren : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
@@ -65,30 +68,44 @@ architecture rtl of dec_vector is
 	signal add_imag : mag_vector;
 	signal ptys : parities := init_parities;
 	signal inp_pty : natural range 0 to parities_max;
-	signal prev_start, swap_d1start, swap_d2start : boolean := false;
+	signal prev_start : boolean := false;
+	type swap_start_delays is array (1 to 2) of boolean;
+	signal swap_start_d : swap_start_delays := (others => false);
 	signal inp_seq, out_seq : sequence_scalar;
 	type inp_stages is array (0 to 8) of boolean;
 	signal inp_stage : inp_stages := (others => false);
 	type swap_stages is array (0 to 3) of boolean;
 	signal swap_stage : swap_stages := (others => false);
-	signal swap_d1soft, swap_d2soft : soft_scalar;
-	signal swap_pos, swap_d1pos : natural range 0 to code_vectors-1;
-	signal inp_num : natural range 0 to degree_max := 0;
-	signal out_num : natural range 0 to degree_max := degree_max;
+	type swap_soft_delays is array (1 to 2) of soft_scalar;
+	signal swap_soft_d : swap_soft_delays;
+	signal swap_pos, swap_dpos : natural range 0 to code_vectors-1;
+	subtype num_scalar is natural range 0 to degree_max;
+	signal inp_num : num_scalar := 0;
+	signal out_num : num_scalar := degree_max;
 	signal inp_cnt, out_cnt : count_scalar := degree_max;
 	signal inp_loc : location_scalar;
 	type out_stages is array (0 to 5) of boolean;
 	signal out_stage : out_stages := (others => false);
-	signal out_d1off, out_d2off, out_d3off, out_d4off : offset_scalar;
-	signal out_d1shi, out_d2shi : shift_scalar;
-	signal out_d1wdf, out_d2wdf, out_d3wdf, out_d4wdf : boolean;
-	signal inp_d1num, inp_d2num, inp_d3num, inp_d4num, inp_d5num, inp_d6num, inp_d7num, inp_d8num : natural range 0 to degree_max;
-	signal inp_d1cnt, inp_d2cnt, inp_d3cnt, inp_d4cnt, inp_d5cnt, inp_d6cnt, inp_d7cnt, inp_d8cnt : count_scalar;
-	signal inp_d1seq, inp_d2seq, inp_d3seq, inp_d4seq, inp_d5seq, inp_d6seq, inp_d7seq, inp_d8seq : sequence_scalar;
-	signal inp_d1loc, inp_d2loc, inp_d3loc, inp_d4loc, inp_d5loc, inp_d6loc, inp_d7loc, inp_d8loc : location_scalar;
-	signal inp_d1wdf, inp_d2wdf, inp_d3wdf, inp_d4wdf, inp_d5wdf, inp_d6wdf : boolean;
-	signal inp_d1off, inp_d2off, inp_d3off, inp_d4off, inp_d5off, inp_d6off : offset_scalar;
-	signal inp_d1shi, inp_d2shi, inp_d3shi, inp_d4shi, inp_d5shi, inp_d6shi : shift_scalar;
+	type out_off_delays is array (1 to 4) of offset_scalar;
+	signal out_off_d : out_off_delays;
+	type out_shi_delays is array (1 to 2) of shift_scalar;
+	signal out_shi_d : out_shi_delays;
+	type out_wdf_delays is array (1 to 4) of boolean;
+	signal out_wdf_d : out_wdf_delays;
+	type inp_num_delays is array (1 to 8) of num_scalar;
+	signal inp_num_d : inp_num_delays;
+	type inp_cnt_delays is array (1 to 8) of count_scalar;
+	signal inp_cnt_d : inp_cnt_delays;
+	type inp_seq_delays is array (1 to 8) of sequence_scalar;
+	signal inp_seq_d : inp_seq_delays;
+	type inp_loc_delays is array (1 to 8) of location_scalar;
+	signal inp_loc_d : inp_loc_delays;
+	type inp_wdf_delays is array (1 to 6) of boolean;
+	signal inp_wdf_d : inp_wdf_delays;
+	type inp_off_delays is array (1 to 6) of offset_scalar;
+	signal inp_off_d : inp_off_delays;
+	type inp_shi_delays is array (1 to 6) of shift_scalar;
+	signal inp_shi_d : inp_shi_delays;
 begin
 	loc_inst : entity work.loc_vector
 		port map (clock, loc_wren,
@@ -159,11 +176,11 @@ begin
 				swap_cb <= 0;
 				swap_bv <= 0;
 				swap_vs <= 0;
-				swap_d1start <= prev_start;
+				swap_start_d(1) <= prev_start;
 				prev_start <= istart;
 				swap_stage(0) <= true;
 			elsif swap_cb /= code_blocks then
-				swap_d1start <= false;
+				swap_start_d(1) <= false;
 				if swap_bv = block_vectors-1 then
 					swap_bv <= 0;
 					if swap_vs = vector_scalars-1 then
@@ -184,29 +201,29 @@ begin
 			end if;
 
 			if swap_stage(0) then
-				swap_d1vs <= swap_vs;
-				swap_d2start <= swap_d1start;
-				swap_d1soft <= isoft;
+				swap_vs_d(1) <= swap_vs;
+				swap_start_d(2) <= swap_start_d(1);
+				swap_soft_d(1) <= isoft;
 				swap_pos <= block_vectors * swap_cb + swap_bv;
 				var_rpos <= block_vectors * swap_cb + swap_bv;
 			end if;
 
 			swap_stage(1) <= swap_stage(0);
 			if swap_stage(1) then
-				swap_d2vs <= swap_d1vs;
-				ostart <= swap_d2start;
-				swap_d2soft <= swap_d1soft;
-				swap_d1pos <= swap_pos;
+				swap_vs_d(2) <= swap_vs_d(1);
+				ostart <= swap_start_d(2);
+				swap_soft_d(2) <= swap_soft_d(1);
+				swap_dpos <= swap_pos;
 			end if;
 
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
-				osoft <= var_ovar(swap_d2vs);
+				osoft <= var_ovar(swap_vs_d(2));
 				var_wren <= true;
-				var_wpos <= swap_d1pos;
+				var_wpos <= swap_dpos;
 				for idx in var_ivar'range loop
-					if swap_d2vs = idx then
-						var_ivar(idx) <= swap_d2soft;
+					if swap_vs_d(2) = idx then
+						var_ivar(idx) <= swap_soft_d(2);
 					else
 						var_ivar(idx) <= var_ovar(idx);
 					end if;
@@ -267,136 +284,136 @@ begin
 			if inp_stage(0) and not cnp_busy then
 				loc_rpos <= inp_loc;
 				wdf_rpos <= inp_loc;
-				inp_d1num <= inp_num;
-				inp_d1cnt <= inp_cnt;
-				inp_d1seq <= inp_seq;
-				inp_d1loc <= inp_loc;
+				inp_num_d(1) <= inp_num;
+				inp_cnt_d(1) <= inp_cnt;
+				inp_seq_d(1) <= inp_seq;
+				inp_loc_d(1) <= inp_loc;
 			end if;
 
 			inp_stage(1) <= inp_stage(0);
 			if inp_stage(1) and not cnp_busy then
-				inp_d2num <= inp_d1num;
-				inp_d2cnt <= inp_d1cnt;
-				inp_d2seq <= inp_d1seq;
-				inp_d2loc <= inp_d1loc;
+				inp_num_d(2) <= inp_num_d(1);
+				inp_cnt_d(2) <= inp_cnt_d(1);
+				inp_seq_d(2) <= inp_seq_d(1);
+				inp_loc_d(2) <= inp_loc_d(1);
 			end if;
 
 			inp_stage(2) <= inp_stage(1);
 			if inp_stage(2) and not cnp_busy then
 				var_rpos <= loc_ooff;
-				if inp_d2seq = 0 then
-					if inp_d2num = 1 then
-						inp_d1wdf <= false;
+				if inp_seq_d(2) = 0 then
+					if inp_num_d(2) = 1 then
+						inp_wdf_d(1) <= false;
 					else
-						inp_d1wdf <= inp_d1off = loc_ooff;
+						inp_wdf_d(1) <= inp_off_d(1) = loc_ooff;
 					end if;
 				else
-					inp_d1wdf <= wdf_owdf;
+					inp_wdf_d(1) <= wdf_owdf;
 				end if;
-				inp_d3num <= inp_d2num;
-				inp_d3cnt <= inp_d2cnt;
-				inp_d3seq <= inp_d2seq;
-				inp_d3loc <= inp_d2loc;
-				inp_d1off <= loc_ooff;
-				inp_d1shi <= loc_oshi;
+				inp_num_d(3) <= inp_num_d(2);
+				inp_cnt_d(3) <= inp_cnt_d(2);
+				inp_seq_d(3) <= inp_seq_d(2);
+				inp_loc_d(3) <= inp_loc_d(2);
+				inp_off_d(1) <= loc_ooff;
+				inp_shi_d(1) <= loc_oshi;
 			end if;
 
 			inp_stage(3) <= inp_stage(2);
 			if inp_stage(3) and not cnp_busy then
-				if inp_d3num = 1 then
-					first_wdf <= inp_d1wdf;
-				elsif inp_d3num /= 0 then
+				if inp_num_d(3) = 1 then
+					first_wdf <= inp_wdf_d(1);
+				elsif inp_num_d(3) /= 0 then
 					wdf_wren <= true;
-					wdf_wpos <= inp_d4loc;
-					if inp_d2off = inp_d1off then
-						wdf_iwdf <= inp_d1wdf;
+					wdf_wpos <= inp_loc_d(4);
+					if inp_off_d(2) = inp_off_d(1) then
+						wdf_iwdf <= inp_wdf_d(1);
 					else
 						wdf_iwdf <= first_wdf;
-						first_wdf <= inp_d1wdf;
+						first_wdf <= inp_wdf_d(1);
 					end if;
 				end if;
-				inp_d4num <= inp_d3num;
-				inp_d4cnt <= inp_d3cnt;
-				inp_d4seq <= inp_d3seq;
-				inp_d4loc <= inp_d3loc;
-				inp_d2wdf <= inp_d1wdf;
-				inp_d2off <= inp_d1off;
-				inp_d2shi <= inp_d1shi;
+				inp_num_d(4) <= inp_num_d(3);
+				inp_cnt_d(4) <= inp_cnt_d(3);
+				inp_seq_d(4) <= inp_seq_d(3);
+				inp_loc_d(4) <= inp_loc_d(3);
+				inp_wdf_d(2) <= inp_wdf_d(1);
+				inp_off_d(2) <= inp_off_d(1);
+				inp_shi_d(2) <= inp_shi_d(1);
 			end if;
 
 			inp_stage(4) <= inp_stage(3);
 			if inp_stage(4) and not cnp_busy then
-				if inp_d4num = inp_d4cnt then
+				if inp_num_d(4) = inp_cnt_d(4) then
 					wdf_wren <= false;
 				end if;
-				rol_shift <= inp_d2shi;
+				rol_shift <= inp_shi_d(2);
 				rol_isoft <= var_ovar;
-				bnl_rpos <= inp_d4loc;
-				inp_d5num <= inp_d4num;
-				inp_d5cnt <= inp_d4cnt;
-				inp_d5seq <= inp_d4seq;
-				inp_d5loc <= inp_d4loc;
-				inp_d3wdf <= inp_d2wdf;
-				inp_d3off <= inp_d2off;
-				inp_d3shi <= inp_d2shi;
+				bnl_rpos <= inp_loc_d(4);
+				inp_num_d(5) <= inp_num_d(4);
+				inp_cnt_d(5) <= inp_cnt_d(4);
+				inp_seq_d(5) <= inp_seq_d(4);
+				inp_loc_d(5) <= inp_loc_d(4);
+				inp_wdf_d(3) <= inp_wdf_d(2);
+				inp_off_d(3) <= inp_off_d(2);
+				inp_shi_d(3) <= inp_shi_d(2);
 			end if;
 
 			inp_stage(5) <= inp_stage(4);
 			if inp_stage(5) and not cnp_busy then
-				inp_d6num <= inp_d5num;
-				inp_d6cnt <= inp_d5cnt;
-				inp_d6seq <= inp_d5seq;
-				inp_d6loc <= inp_d5loc;
-				inp_d4wdf <= inp_d3wdf;
-				inp_d4off <= inp_d3off;
-				inp_d4shi <= inp_d3shi;
+				inp_num_d(6) <= inp_num_d(5);
+				inp_cnt_d(6) <= inp_cnt_d(5);
+				inp_seq_d(6) <= inp_seq_d(5);
+				inp_loc_d(6) <= inp_loc_d(5);
+				inp_wdf_d(4) <= inp_wdf_d(3);
+				inp_off_d(4) <= inp_off_d(3);
+				inp_shi_d(4) <= inp_shi_d(3);
 			end if;
 
 			inp_stage(6) <= inp_stage(5);
 			if inp_stage(6) and not cnp_busy then
-				if inp_d4off = code_vectors-1 and inp_d4shi = 1 then
+				if inp_off_d(4) = code_vectors-1 and inp_shi_d(4) = 1 then
 					prev_val <= rol_osoft(rol_osoft'low);
 					sub_isft <= soft_scalar'high & rol_osoft(rol_osoft'low+1 to rol_osoft'high);
 				else
 					sub_isft <= rol_osoft;
 				end if;
-				if inp_d6seq = 0 then
+				if inp_seq_d(6) = 0 then
 					sub_isgn <= (others => false);
 					sub_imag <= (others => 0);
 				else
 					sub_isgn <= bnl_osgn;
 					sub_imag <= bnl_omag;
 				end if;
-				inp_d7num <= inp_d6num;
-				inp_d7cnt <= inp_d6cnt;
-				inp_d7seq <= inp_d6seq;
-				inp_d7loc <= inp_d6loc;
-				inp_d5wdf <= inp_d4wdf;
-				inp_d5off <= inp_d4off;
-				inp_d5shi <= inp_d4shi;
+				inp_num_d(7) <= inp_num_d(6);
+				inp_cnt_d(7) <= inp_cnt_d(6);
+				inp_seq_d(7) <= inp_seq_d(6);
+				inp_loc_d(7) <= inp_loc_d(6);
+				inp_wdf_d(5) <= inp_wdf_d(4);
+				inp_off_d(5) <= inp_off_d(4);
+				inp_shi_d(5) <= inp_shi_d(4);
 			end if;
 
 			inp_stage(7) <= inp_stage(6);
 			if inp_stage(7) and not cnp_busy then
-				inp_d8num <= inp_d7num;
-				inp_d8cnt <= inp_d7cnt;
-				inp_d8seq <= inp_d7seq;
-				inp_d8loc <= inp_d7loc;
-				inp_d6wdf <= inp_d5wdf;
-				inp_d6off <= inp_d5off;
-				inp_d6shi <= inp_d5shi;
+				inp_num_d(8) <= inp_num_d(7);
+				inp_cnt_d(8) <= inp_cnt_d(7);
+				inp_seq_d(8) <= inp_seq_d(7);
+				inp_loc_d(8) <= inp_loc_d(7);
+				inp_wdf_d(6) <= inp_wdf_d(5);
+				inp_off_d(6) <= inp_off_d(5);
+				inp_shi_d(6) <= inp_shi_d(5);
 			end if;
 
 			inp_stage(8) <= inp_stage(7);
 			if inp_stage(8) and not cnp_busy then
-				cnp_istart <= inp_d8num = 0;
-				cnp_icount <= inp_d8cnt;
+				cnp_istart <= inp_num_d(8) = 0;
+				cnp_icount <= inp_cnt_d(8);
 				cnp_isft <= sub_osft;
-				cnp_iseq <= inp_d8seq;
-				cnp_iloc <= inp_d8loc;
-				cnp_iwdf <= inp_d6wdf;
-				cnp_ioff <= inp_d6off;
-				cnp_ishi <= inp_d6shi;
+				cnp_iseq <= inp_seq_d(8);
+				cnp_iloc <= inp_loc_d(8);
+				cnp_iwdf <= inp_wdf_d(6);
+				cnp_ioff <= inp_off_d(6);
+				cnp_ishi <= inp_shi_d(6);
 			end if;
 
 --			report boolean'image(cnp_istart) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_icount) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & integer'image(cnp_ishi) & HT & boolean'image(cnp_iwdf) & HT &
@@ -422,9 +439,9 @@ begin
 				add_isft <= cnp_osft;
 				add_isgn <= cnp_osgn;
 				add_imag <= cnp_omag;
-				out_d1wdf <= cnp_owdf;
-				out_d1off <= cnp_ooff;
-				out_d1shi <= cnp_oshi;
+				out_wdf_d(1) <= cnp_owdf;
+				out_off_d(1) <= cnp_ooff;
+				out_shi_d(1) <= cnp_oshi;
 				bnl_wpos <= cnp_oloc;
 				bnl_wren <= cnp_oseq = 0 or not cnp_owdf;
 				if not cnp_owdf then
@@ -440,34 +457,34 @@ begin
 
 			out_stage(1) <= out_stage(0);
 			if out_stage(1) then
-				out_d2off <= out_d1off;
-				out_d2shi <= out_d1shi;
-				out_d2wdf <= out_d1wdf;
+				out_off_d(2) <= out_off_d(1);
+				out_shi_d(2) <= out_shi_d(1);
+				out_wdf_d(2) <= out_wdf_d(1);
 			end if;
 
 			out_stage(2) <= out_stage(1);
 			if out_stage(2) then
-				ror_shift <= out_d2shi;
-				if out_d2off = code_vectors-1 and out_d2shi = 1 then
+				ror_shift <= out_shi_d(2);
+				if out_off_d(2) = code_vectors-1 and out_shi_d(2) = 1 then
 					ror_isoft <= prev_val & add_osft(add_osft'low+1 to add_osft'high);
 				else
 					ror_isoft <= add_osft;
 				end if;
-				out_d3off <= out_d2off;
-				out_d3wdf <= out_d2wdf;
+				out_off_d(3) <= out_off_d(2);
+				out_wdf_d(3) <= out_wdf_d(2);
 			end if;
 
 			out_stage(3) <= out_stage(2);
 			if out_stage(3) then
-				out_d4off <= out_d3off;
-				out_d4wdf <= out_d3wdf;
+				out_off_d(4) <= out_off_d(3);
+				out_wdf_d(4) <= out_wdf_d(3);
 			end if;
 
 			out_stage(4) <= out_stage(3);
 			if out_stage(4) then
 				var_ivar <= ror_osoft;
-				var_wpos <= out_d4off;
-				var_wren <= not out_d4wdf;
+				var_wpos <= out_off_d(4);
+				var_wren <= not out_wdf_d(4);
 			end if;
 
 			out_stage(5) <= out_stage(4);
