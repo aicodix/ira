@@ -260,7 +260,7 @@ begin
 					elsif inp_loc+1 /= locations_max-1 then
 						inp_loc <= inp_loc + 1;
 					end if;
-					if inp_num+2 = inp_cnt then
+					if inp_num = 0 then
 						if inp_pty+1 = ptys then
 							cnt_rpos <= 0;
 						elsif cnt_rpos+1 /= parities_max-1 then
