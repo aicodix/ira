@@ -68,6 +68,14 @@ buffer for the vector check node processor
 
 Generate random noise
 
+### [add_scalar.vhd](add_scalar.vhd)
+
+scalar saturating addition
+
+### [add_vector.vhd](add_vector.vhd)
+
+vector saturating addition
+
 ### [rol_vector.vhd](rol_vector.vhd)
 
 rotate left vector elements
@@ -76,9 +84,13 @@ rotate left vector elements
 
 rotate right vector elements
 
+### [bnl_scalar.vhd](bnl_scalar.vhd)
+
+scalar bit node links
+
 ### [bnl_vector.vhd](bnl_vector.vhd)
 
-bit node links for the vector decoder
+vector bit node links
 
 ### [cnt_vector.vhd](cnt_vector.vhd)
 
@@ -88,9 +100,13 @@ counts for the vector decoder
 
 locations for the vector decoder
 
+### [var_scalar.vhd](var_scalar.vhd)
+
+scalar variable nodes
+
 ### [var_vector.vhd](var_vector.vhd)
 
-variable nodes for the vector decoder
+vector variable nodes
 
 ### [wdf_vector.vhd](wdf_vector.vhd)
 
