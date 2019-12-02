@@ -31,7 +31,11 @@ entity cnp_vector is
 end cnp_vector;
 
 architecture rtl of cnp_vector is
-	signal imin0, imin1, omin0, omin1 : mag_vector;
+	type two_min_scalar is record
+		lo, hi : mag_scalar;
+	end record;
+	type two_min_vector is array (0 to vector_scalars-1) of two_min_scalar;
+	signal imin, omin : two_min_vector;
 	signal ipty, opty : sgn_vector;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal num : num_scalar := num_scalar'high;
@@ -94,14 +98,14 @@ architecture rtl of cnp_vector is
 		return tmp;
 	end function;
 
-	function other (mag, mag0, mag1 : mag_vector) return mag_vector is
+	function other (mag : mag_vector; min : two_min_vector) return mag_vector is
 		variable tmp : mag_vector;
 	begin
 		for idx in tmp'range loop
-			if mag(idx) = mag0(idx) then
-				tmp(idx) := mag1(idx);
+			if mag(idx) = min(idx).lo then
+				tmp(idx) := min(idx).hi;
 			else
-				tmp(idx) := mag0(idx);
+				tmp(idx) := min(idx).lo;
 			end if;
 		end loop;
 		return tmp;
@@ -116,18 +120,23 @@ architecture rtl of cnp_vector is
 		return tmp;
 	end function;
 
-	procedure two_min (signal mag : in mag_vector;
-			signal min0, min1 : inout mag_vector) is
+	function two_min (mag : mag_vector; min : two_min_vector) return two_min_vector is
+		variable tmp : two_min_vector;
 	begin
 		for idx in mag_vector'range loop
-			if mag(idx) < min0(idx) then
-				min1(idx) <= min0(idx);
-				min0(idx) <= mag(idx);
-			elsif mag(idx) < min1(idx) then
-				min1(idx) <= mag(idx);
+			if mag(idx) < min(idx).lo then
+				tmp(idx).hi := min(idx).lo;
+				tmp(idx).lo := mag(idx);
+			elsif mag(idx) < min(idx).hi then
+				tmp(idx).hi := mag(idx);
+				tmp(idx).lo := min(idx).lo;
+			else
+				tmp(idx).lo := min(idx).lo;
+				tmp(idx).hi := min(idx).hi;
 			end if;
 		end loop;
-	end procedure;
+		return tmp;
+	end function;
 begin
 	buf_inst : entity work.buf_vector
 		port map (clock,
@@ -143,7 +152,7 @@ begin
 	imag <= oms(isft);
 	isgn <= neg(isft);
 	osft <= buf_osft;
-	omag <= other(buf_omag, omin0, omin1);
+	omag <= other(buf_omag, omin);
 	osgn <= buf_osgn xor opty;
 	owdf <= buf_owdf;
 	oloc <= buf_oloc;
@@ -171,11 +180,9 @@ begin
 					shorter <= true;
 					busy <= true;
 				end if;
-				omin0 <= imin0;
-				omin1 <= imin1;
+				omin <= imin;
 				opty <= ipty;
-				imin0 <= (others => mag_scalar'high);
-				imin1 <= (others => mag_scalar'high);
+				imin <= (others => (mag_scalar'high, mag_scalar'high));
 				ipty <= (others => false);
 			elsif num /= num_scalar'high then
 				num <= num + 1;
@@ -192,7 +199,7 @@ begin
 					end if;
 				end if;
 				if okay then
-					two_min(imag, imin0, imin1);
+					imin <= two_min(imag, imin);
 					ipty <= ipty xor isgn;
 				end if;
 				if num = 0 then
