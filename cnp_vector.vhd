@@ -65,75 +65,90 @@ architecture rtl of cnp_vector is
 	signal buf_ishi : shift_scalar;
 	signal buf_oshi : shift_scalar;
 
-	function ms (val : soft_vector) return mag_vector is
+	function ms (val : soft_scalar) return mag_scalar is
 		constant max : integer := mag_scalar'high;
 		constant min : integer := -max;
+	begin
+		if val < min or val > max then
+			return mag_scalar'high;
+		else
+			return abs(val);
+		end if;
+	end function;
+
+	function oms (val : soft_scalar) return mag_scalar is
+		constant beta : integer := 1;
+		constant max : integer := mag_scalar'high + beta;
+		constant min : integer := -max;
+	begin
+		if val < min or val > max then
+			return mag_scalar'high;
+		elsif abs(val) < beta then
+			return 0;
+		else
+			return abs(val) - beta;
+		end if;
+	end function;
+
+	function oms (val : soft_vector) return mag_vector is
 		variable tmp : mag_vector;
 	begin
 		for idx in tmp'range loop
-			if val(idx) < min or val(idx) > max then
-				tmp(idx) := mag_scalar'high;
-			else
-				tmp(idx) := abs(val(idx));
-			end if;
+			tmp(idx) := oms(val(idx));
 		end loop;
 		return tmp;
 	end function;
 
-	function oms (val : soft_vector) return mag_vector is
-		constant beta : integer := 1;
-		constant max : integer := mag_scalar'high + beta;
-		constant min : integer := -max;
-		variable tmp : mag_vector;
+	function other (mag : mag_scalar; min : two_min_scalar) return mag_scalar is
+		variable tmp : mag_scalar;
 	begin
-		for idx in tmp'range loop
-			if val(idx) < min or val(idx) > max then
-				tmp(idx) := mag_scalar'high;
-			elsif abs(val(idx)) < beta then
-				tmp(idx) := 0;
-			else
-				tmp(idx) := abs(val(idx)) - beta;
-			end if;
-		end loop;
-		return tmp;
+		if mag = min.lo then
+			return min.hi;
+		else
+			return min.lo;
+		end if;
 	end function;
 
 	function other (mag : mag_vector; min : two_min_vector) return mag_vector is
 		variable tmp : mag_vector;
 	begin
 		for idx in tmp'range loop
-			if mag(idx) = min(idx).lo then
-				tmp(idx) := min(idx).hi;
-			else
-				tmp(idx) := min(idx).lo;
-			end if;
+			tmp(idx) := other(mag(idx), min(idx));
 		end loop;
 		return tmp;
+	end function;
+
+	function neg (val : soft_scalar) return boolean is
+	begin
+		return val < 0;
 	end function;
 
 	function neg (val : soft_vector) return sgn_vector is
 		variable tmp : sgn_vector;
 	begin
 		for idx in tmp'range loop
-			tmp(idx) := val(idx) < 0;
+			tmp(idx) := neg(val(idx));
 		end loop;
 		return tmp;
+	end function;
+
+	function two_min (mag : mag_scalar; min : two_min_scalar) return two_min_scalar is
+		variable tmp : two_min_scalar;
+	begin
+		if mag < min.lo then
+			return (mag, min.lo);
+		elsif mag < min.hi then
+			return (min.lo, mag);
+		else
+			return min;
+		end if;
 	end function;
 
 	function two_min (mag : mag_vector; min : two_min_vector) return two_min_vector is
 		variable tmp : two_min_vector;
 	begin
 		for idx in mag_vector'range loop
-			if mag(idx) < min(idx).lo then
-				tmp(idx).hi := min(idx).lo;
-				tmp(idx).lo := mag(idx);
-			elsif mag(idx) < min(idx).hi then
-				tmp(idx).hi := mag(idx);
-				tmp(idx).lo := min(idx).lo;
-			else
-				tmp(idx).lo := min(idx).lo;
-				tmp(idx).hi := min(idx).hi;
-			end if;
+			tmp(idx) := two_min(mag(idx), min(idx));
 		end loop;
 		return tmp;
 	end function;
