@@ -1,4 +1,4 @@
--- saturating addition for the vector decoder
+-- vector saturating addition
 --
 -- Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
@@ -18,40 +18,12 @@ entity add_vector is
 end add_vector;
 
 architecture rtl of add_vector is
-	function add (val : soft_vector; sgn : sgn_vector; mag : mag_vector) return soft_vector is
-		variable tmp : soft_vector;
-		subtype signed_mag_scalar is integer range -mag_scalar'high to mag_scalar'high;
-		type signed_mag_vector is array (0 to vector_scalars-1) of signed_mag_scalar;
-		variable sig : signed_mag_vector;
-		subtype sum_scalar is integer range soft_scalar'low-mag_scalar'high to soft_scalar'high+mag_scalar'high;
-		type sum_vector is array (0 to vector_scalars-1) of sum_scalar;
-		variable sum : sum_vector;
-	begin
-		for idx in tmp'range loop
-			if sgn(idx) then
-				sig(idx) := -mag(idx);
-			else
-				sig(idx) := mag(idx);
-			end if;
-			sum(idx) := val(idx) + sig(idx);
-			if sum(idx) > soft_scalar'high then
-				tmp(idx) := soft_scalar'high;
-			elsif sum(idx) < soft_scalar'low then
-				tmp(idx) := soft_scalar'low;
-			else
-				tmp(idx) := sum(idx);
-			end if;
-		end loop;
-		return tmp;
-	end function;
 begin
-	process (clock)
-	begin
-		if rising_edge(clock) then
-			if clken then
-				osft <= add(isft, isgn, imag);
-			end if;
-		end if;
-	end process;
+	vector_inst : for idx in soft_vector'range generate
+		scalar_inst : entity work.add_scalar
+			port map (clock, clken,
+				isft(idx), isgn(idx), imag(idx),
+				osft(idx));
+	end generate;
 end rtl;
 
