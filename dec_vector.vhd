@@ -124,6 +124,7 @@ begin
 
 	var_rden <= not cnp_busy;
 	var_inst : entity work.var_vector
+		generic map (code_vectors)
 		port map (clock,
 			var_wren, var_rden,
 			var_wpos, var_rpos,
@@ -136,6 +137,7 @@ begin
 
 	bnl_rden <= not cnp_busy;
 	bnl_inst : entity work.bnl_vector
+		generic map (locations_max)
 		port map (clock,
 			bnl_wren, bnl_rden,
 			bnl_wpos, bnl_rpos,

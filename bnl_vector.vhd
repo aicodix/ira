@@ -1,4 +1,4 @@
--- bit node links for the vector decoder
+-- vector bit node links
 --
 -- Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
@@ -7,12 +7,15 @@ use ieee.std_logic_1164.all;
 use work.ldpc.all;
 
 entity bnl_vector is
+	generic (
+		size : positive
+	);
 	port (
 		clock : in std_logic;
 		wren : in boolean;
 		rden : in boolean;
-		wpos : in location_scalar;
-		rpos : in location_scalar;
+		wpos : in natural range 0 to size-1;
+		rpos : in natural range 0 to size-1;
 		isgn : in sgn_vector;
 		osgn : out sgn_vector;
 		imag : in mag_vector;
@@ -21,33 +24,13 @@ entity bnl_vector is
 end bnl_vector;
 
 architecture rtl of bnl_vector is
-	type lmb is array (0 to locations_max-1) of boolean;
-	type vslb is array (0 to vector_scalars-1) of lmb;
-	signal sgns : vslb;
-	type lmms is array (0 to locations_max-1) of mag_scalar;
-	type vsms is array (0 to vector_scalars-1) of lmms;
-	signal mags : vsms;
 begin
-	process (clock)
-	begin
-		if rising_edge(clock) then
-			if wren then
-				for idx in isgn'range loop
-					sgns(idx)(wpos) <= isgn(idx);
-				end loop;
-				for idx in imag'range loop
-					mags(idx)(wpos) <= imag(idx);
-				end loop;
-			end if;
-			if rden then
-				for idx in osgn'range loop
-					osgn(idx) <= sgns(idx)(rpos);
-				end loop;
-				for idx in omag'range loop
-					omag(idx) <= mags(idx)(rpos);
-				end loop;
-			end if;
-		end if;
-	end process;
+	vector_inst : for idx in soft_vector'range generate
+		scalar_inst : entity work.bnl_scalar
+			generic map (size)
+			port map (clock, wren, rden, wpos, rpos,
+				isgn(idx), osgn(idx),
+				imag(idx), omag(idx));
+	end generate;
 end rtl;
 
