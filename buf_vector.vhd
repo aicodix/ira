@@ -29,14 +29,6 @@ entity buf_vector is
 end buf_vector;
 
 architecture rtl of buf_vector is
-	type mags_array is array (0 to degree_max-1) of mag_scalar;
-	type mags_vector is array (0 to vector_scalars-1) of mags_array;
-	signal mags : mags_vector;
-	type sfts_array is array (0 to degree_max-1) of soft_scalar;
-	type sfts_vector is array (0 to vector_scalars-1) of sfts_array;
-	signal sfts : sfts_vector;
-	type sgns_array is array (0 to degree_max-1) of sgn_vector;
-	signal sgns : sgns_array;
 	type wdfs_array is array (0 to degree_max-1) of boolean;
 	signal wdfs : wdfs_array;
 	type locs_array is array (0 to degree_max-1) of location_scalar;
@@ -46,29 +38,24 @@ architecture rtl of buf_vector is
 	type shis_array is array (0 to degree_max-1) of shift_scalar;
 	signal shis : shis_array;
 begin
+	vector_inst : for idx in soft_vector'range generate
+		scalar_inst : entity work.sft_sgn_mag
+			generic map (degree_max)
+			port map (clock, wren, addr,
+				isft(idx), osft(idx),
+				isgn(idx), osgn(idx),
+				imag(idx), omag(idx));
+	end generate;
+
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if wren then
-				for idx in isft'range loop
-					sfts(idx)(addr) <= isft(idx);
-				end loop;
-				for idx in imag'range loop
-					mags(idx)(addr) <= imag(idx);
-				end loop;
-				sgns(addr) <= isgn;
 				wdfs(addr) <= iwdf;
 				locs(addr) <= iloc;
 				offs(addr) <= ioff;
 				shis(addr) <= ishi;
 			end if;
-			for idx in osft'range loop
-				osft(idx) <= sfts(idx)(addr);
-			end loop;
-			for idx in omag'range loop
-				omag(idx) <= mags(idx)(addr);
-			end loop;
-			osgn <= sgns(addr);
 			owdf <= wdfs(addr);
 			oloc <= locs(addr);
 			ooff <= offs(addr);
