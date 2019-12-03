@@ -25,14 +25,16 @@ architecture rtl of dec_vector is
 	signal swap_vs : vector_index;
 	type swap_vs_delays is array (1 to 2) of vector_index;
 	signal swap_vs_d : swap_vs_delays;
-	signal prev_val : soft_scalar;
+	signal prev_sgn : boolean;
+	signal prev_mag : vmag_scalar;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
-	signal var_ivar, var_ovar : soft_vector;
+	signal var_isgn, var_osgn : sign_vector;
+	signal var_imag, var_omag : vmag_vector;
 	signal bnl_wren, bnl_rden : boolean := false;
 	signal bnl_wpos, bnl_rpos : location_scalar;
-	signal bnl_isgn, bnl_osgn : sgn_vector;
-	signal bnl_imag, bnl_omag : mag_vector;
+	signal bnl_isgn, bnl_osgn : sign_vector;
+	signal bnl_imag, bnl_omag : cmag_vector;
 	signal first_wdf : boolean;
 	signal wdf_wren, wdf_rden : boolean := false;
 	signal wdf_wpos, wdf_rpos : location_scalar;
@@ -48,25 +50,30 @@ architecture rtl of dec_vector is
 	signal cnp_count : count_scalar;
 	signal cnp_busy, cnp_valid : boolean;
 	signal cnp_iseq, cnp_oseq : sequence_scalar;
-	signal cnp_isft, cnp_osft : soft_vector;
-	signal cnp_osgn : sgn_vector;
-	signal cnp_omag : mag_vector;
+	signal cnp_ivsgn, cnp_ovsgn : sign_vector;
+	signal cnp_ivmag, cnp_ovmag : vmag_vector;
+	signal cnp_ocsgn : sign_vector;
+	signal cnp_ocmag : cmag_vector;
 	signal cnp_iwdf, cnp_owdf : boolean;
 	signal cnp_iloc, cnp_oloc : location_scalar;
 	signal cnp_ioff, cnp_ooff : offset_scalar;
 	signal cnp_ishi, cnp_oshi : shift_scalar;
 	signal rol_clken : boolean;
 	signal rol_shift : natural range 0 to soft_vector'length-1;
-	signal rol_isoft, rol_osoft : soft_vector;
+	signal rol_ivsgn, rol_ovsgn : sign_vector;
+	signal rol_ivmag, rol_ovmag : vmag_vector;
 	signal ror_shift : natural range 0 to soft_vector'length-1;
-	signal ror_isoft, ror_osoft : soft_vector;
+	signal ror_ivsgn, ror_ovsgn : sign_vector;
+	signal ror_ivmag, ror_ovmag : vmag_vector;
 	signal sub_clken : boolean;
-	signal sub_isft, sub_osft : soft_vector;
-	signal sub_isgn, not_sub_isgn : sgn_vector;
-	signal sub_imag : mag_vector;
-	signal add_isft, add_osft : soft_vector;
-	signal add_isgn : sgn_vector;
-	signal add_imag : mag_vector;
+	signal sub_ivsgn, sub_ovsgn : sign_vector;
+	signal sub_ivmag, sub_ovmag : vmag_vector;
+	signal sub_icsgn, not_sub_icsgn : sign_vector;
+	signal sub_icmag : cmag_vector;
+	signal add_ivsgn, add_ovsgn : sign_vector;
+	signal add_ivmag, add_ovmag : vmag_vector;
+	signal add_icsgn : sign_vector;
+	signal add_icmag : cmag_vector;
 	signal ptys : parities := init_parities;
 	signal inp_pty : natural range 0 to parities_max;
 	signal prev_start : boolean := false;
@@ -106,6 +113,29 @@ architecture rtl of dec_vector is
 	signal inp_off_d : inp_off_delays;
 	type inp_shi_delays is array (1 to 6) of shift_scalar;
 	signal inp_shi_d : inp_shi_delays;
+
+	function sign (mag : vmag_scalar; sgn : boolean) return soft_scalar is
+	begin
+		if sgn then
+			return -mag;
+		else
+			return mag;
+		end if;
+	end function;
+
+	function neg (val : soft_scalar) return boolean is
+	begin
+		return val < 0;
+	end function;
+
+	function mag (val : soft_scalar) return vmag_scalar is
+	begin
+		if abs(val) > vmag_scalar'high then
+			return vmag_scalar'high;
+		else
+			return abs(val);
+		end if;
+	end function;
 begin
 	loc_rden <= not cnp_busy;
 	loc_inst : entity work.loc_vector
@@ -128,7 +158,8 @@ begin
 		port map (clock,
 			var_wren, var_rden,
 			var_wpos, var_rpos,
-			var_ivar, var_ovar);
+			var_isgn, var_osgn,
+			var_imag, var_omag);
 
 	cnt_inst : entity work.cnt_vector
 		port map (clock, cnt_wren,
@@ -149,8 +180,9 @@ begin
 			cnp_start, cnp_count,
 			cnp_busy, cnp_valid,
 			cnp_iseq, cnp_oseq,
-			cnp_isft, cnp_osft,
-			cnp_osgn, cnp_omag,
+			cnp_ivsgn, cnp_ivmag,
+			cnp_ovsgn, cnp_ovmag,
+			cnp_ocsgn, cnp_ocmag,
 			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff,
@@ -160,28 +192,28 @@ begin
 	rol_inst : entity work.rol_vector
 		port map (clock, rol_clken,
 			rol_shift,
-			rol_isoft, rol_osoft);
+			rol_ivsgn, rol_ovsgn,
+			rol_ivmag, rol_ovmag);
 
 	ror_inst : entity work.ror_vector
 		port map (clock, true,
 			ror_shift,
-			ror_isoft, ror_osoft);
+			ror_ivsgn, ror_ovsgn,
+			ror_ivmag, ror_ovmag);
 
 	sub_clken <= not cnp_busy;
-	not_sub_isgn <= not sub_isgn;
+	not_sub_icsgn <= not sub_icsgn;
 	sub_inst : entity work.add_vector
 		port map (clock, sub_clken,
-			sub_isft,
-			not_sub_isgn,
-			sub_imag,
-			sub_osft);
+			sub_ivsgn, sub_ivmag,
+			not_sub_icsgn, sub_icmag,
+			sub_ovsgn, sub_ovmag);
 
 	add_inst : entity work.add_vector
 		port map (clock, true,
-			add_isft,
-			add_isgn,
-			add_imag,
-			add_osft);
+			add_ivsgn, add_ivmag,
+			add_icsgn, add_icmag,
+			add_ovsgn, add_ovmag);
 
 	process (clock)
 	begin
@@ -232,14 +264,16 @@ begin
 
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
-				osoft <= var_ovar(swap_vs_d(2));
+				osoft <= sign(var_omag(swap_vs_d(2)), var_osgn(swap_vs_d(2)));
 				var_wren <= true;
 				var_wpos <= swap_dpos;
-				for idx in var_ivar'range loop
+				for idx in soft_vector'range loop
 					if swap_vs_d(2) = idx then
-						var_ivar(idx) <= swap_soft_d(2);
+						var_isgn(idx) <= neg(swap_soft_d(2));
+						var_imag(idx) <= mag(swap_soft_d(2));
 					else
-						var_ivar(idx) <= var_ovar(idx);
+						var_isgn(idx) <= var_osgn(idx);
+						var_imag(idx) <= var_omag(idx);
 					end if;
 				end loop;
 			end if;
@@ -362,7 +396,8 @@ begin
 					wdf_iwdf <= first_wdf;
 				end if;
 				rol_shift <= inp_shi_d(2);
-				rol_isoft <= var_ovar;
+				rol_ivsgn <= var_osgn;
+				rol_ivmag <= var_omag;
 				bnl_rpos <= inp_loc_d(4);
 				inp_num_d(5) <= inp_num_d(4);
 				inp_cnt_d(5) <= inp_cnt_d(4);
@@ -390,17 +425,20 @@ begin
 			inp_stage(6) <= inp_stage(5);
 			if inp_stage(6) and not cnp_busy then
 				if inp_off_d(4) = code_vectors-1 and inp_shi_d(4) = 1 then
-					prev_val <= rol_osoft(rol_osoft'low);
-					sub_isft <= soft_scalar'high & rol_osoft(rol_osoft'low+1 to rol_osoft'high);
+					prev_sgn <= rol_ovsgn(sign_vector'low);
+					prev_mag <= rol_ovmag(vmag_vector'low);
+					sub_ivsgn <= false & rol_ovsgn(sign_vector'low+1 to sign_vector'high);
+					sub_ivmag <= vmag_scalar'high & rol_ovmag(vmag_vector'low+1 to vmag_vector'high);
 				else
-					sub_isft <= rol_osoft;
+					sub_ivsgn <= rol_ovsgn;
+					sub_ivmag <= rol_ovmag;
 				end if;
 				if inp_seq_d(6) = 0 then
-					sub_isgn <= (others => false);
-					sub_imag <= (others => 0);
+					sub_icsgn <= (others => false);
+					sub_icmag <= (others => 0);
 				else
-					sub_isgn <= bnl_osgn;
-					sub_imag <= bnl_omag;
+					sub_icsgn <= bnl_osgn;
+					sub_icmag <= bnl_omag;
 				end if;
 				inp_num_d(7) <= inp_num_d(6);
 				inp_cnt_d(7) <= inp_cnt_d(6);
@@ -426,7 +464,8 @@ begin
 			if inp_stage(8) and not cnp_busy then
 				cnp_start <= inp_num_d(8) = 0;
 				cnp_count <= inp_cnt_d(8);
-				cnp_isft <= sub_osft;
+				cnp_ivsgn <= sub_ovsgn;
+				cnp_ivmag <= sub_ovmag;
 				cnp_iseq <= inp_seq_d(8);
 				cnp_iloc <= inp_loc_d(8);
 				cnp_iwdf <= inp_wdf_d(6);
@@ -443,17 +482,18 @@ begin
 --				integer'image(cnp_omag(0)) & HT & integer'image(cnp_omag(1)) & HT & integer'image(cnp_omag(2)) & HT & integer'image(cnp_omag(3)) & HT & integer'image(cnp_omag(4));
 
 			if cnp_valid then
-				add_isft <= cnp_osft;
-				add_isgn <= cnp_osgn;
-				add_imag <= cnp_omag;
+				add_ivsgn <= cnp_ovsgn;
+				add_ivmag <= cnp_ovmag;
+				add_icsgn <= cnp_ocsgn;
+				add_icmag <= cnp_ocmag;
 				out_wdf_d(1) <= cnp_owdf;
 				out_off_d(1) <= cnp_ooff;
 				out_shi_d(1) <= cnp_oshi;
 				bnl_wpos <= cnp_oloc;
 				bnl_wren <= cnp_oseq = 0 or not cnp_owdf;
 				if not cnp_owdf then
-					bnl_isgn <= cnp_osgn;
-					bnl_imag <= cnp_omag;
+					bnl_isgn <= cnp_ocsgn;
+					bnl_imag <= cnp_ocmag;
 				elsif cnp_oseq = 0 then
 					bnl_isgn <= (others => false);
 					bnl_imag <= (others => 0);
@@ -473,9 +513,11 @@ begin
 			if out_stage(2) then
 				ror_shift <= out_shi_d(2);
 				if out_off_d(2) = code_vectors-1 and out_shi_d(2) = 1 then
-					ror_isoft <= prev_val & add_osft(add_osft'low+1 to add_osft'high);
+					ror_ivsgn <= prev_sgn & add_ovsgn(sign_vector'low+1 to sign_vector'high);
+					ror_ivmag <= prev_mag & add_ovmag(vmag_vector'low+1 to vmag_vector'high);
 				else
-					ror_isoft <= add_osft;
+					ror_ivsgn <= add_ovsgn;
+					ror_ivmag <= add_ovmag;
 				end if;
 				out_off_d(3) <= out_off_d(2);
 				out_wdf_d(3) <= out_wdf_d(2);
@@ -489,7 +531,8 @@ begin
 
 			out_stage(4) <= out_stage(3);
 			if out_stage(4) then
-				var_ivar <= ror_osoft;
+				var_isgn <= ror_ovsgn;
+				var_imag <= ror_ovmag;
 				var_wpos <= out_off_d(4);
 				var_wren <= not out_wdf_d(4);
 			end if;

@@ -11,12 +11,12 @@ entity buf_vector is
 		clock : in std_logic;
 		wren : in boolean;
 		addr : in natural range 0 to degree_max-1;
-		isft : in soft_vector;
-		osft : out soft_vector;
-		isgn : in sgn_vector;
-		osgn : out sgn_vector;
-		imag : in mag_vector;
-		omag : out mag_vector;
+		ivsgn : in sign_vector;
+		ovsgn : out sign_vector;
+		ivmag : in vmag_vector;
+		ovmag : out vmag_vector;
+		icmag : in cmag_vector;
+		ocmag : out cmag_vector;
 		iwdf : in boolean;
 		owdf : out boolean;
 		iloc : in location_scalar;
@@ -39,12 +39,12 @@ architecture rtl of buf_vector is
 	signal shis : shis_array;
 begin
 	vector_inst : for idx in soft_vector'range generate
-		scalar_inst : entity work.sft_sgn_mag
+		scalar_inst : entity work.fub_scalar
 			generic map (degree_max)
 			port map (clock, wren, addr,
-				isft(idx), osft(idx),
-				isgn(idx), osgn(idx),
-				imag(idx), omag(idx));
+				ivsgn(idx), ovsgn(idx),
+				ivmag(idx), ovmag(idx),
+				icmag(idx), ocmag(idx));
 	end generate;
 
 	process (clock)

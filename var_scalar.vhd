@@ -16,23 +16,29 @@ entity var_scalar is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		ivar : in soft_scalar;
-		ovar : out soft_scalar
+		isgn : in boolean;
+		osgn : out boolean;
+		imag : in vmag_scalar;
+		omag : out vmag_scalar
 	);
 end var_scalar;
 
 architecture rtl of var_scalar is
-	type scalar_array is array (0 to size-1) of soft_scalar;
-	signal vars : scalar_array;
+	type sign_array is array (0 to size-1) of boolean;
+	signal sgns : sign_array;
+	type vmag_array is array (0 to size-1) of vmag_scalar;
+	signal mags : vmag_array;
 begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if wren then
-				vars(wpos) <= ivar;
+				sgns(wpos) <= isgn;
+				mags(wpos) <= imag;
 			end if;
 			if rden then
-				ovar <= vars(rpos);
+				osgn <= sgns(rpos);
+				omag <= mags(rpos);
 			end if;
 		end if;
 	end process;

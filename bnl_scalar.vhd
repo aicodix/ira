@@ -18,16 +18,16 @@ entity bnl_scalar is
 		rpos : in natural range 0 to size-1;
 		isgn : in boolean;
 		osgn : out boolean;
-		imag : in mag_scalar;
-		omag : out mag_scalar
+		imag : in cmag_scalar;
+		omag : out cmag_scalar
 	);
 end bnl_scalar;
 
 architecture rtl of bnl_scalar is
 	type sgn_array is array (0 to size-1) of boolean;
 	signal sgns : sgn_array;
-	type mag_array is array (0 to size-1) of mag_scalar;
-	signal mags : mag_array;
+	type cmag_array is array (0 to size-1) of cmag_scalar;
+	signal mags : cmag_array;
 begin
 	process (clock)
 	begin

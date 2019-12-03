@@ -16,8 +16,10 @@ entity var_vector is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		ivar : in soft_vector;
-		ovar : out soft_vector
+		isgn : in sign_vector;
+		osgn : out sign_vector;
+		imag : in vmag_vector;
+		omag : out vmag_vector
 	);
 end var_vector;
 
@@ -26,7 +28,9 @@ begin
 	vector_inst : for idx in soft_vector'range generate
 		scalar_inst : entity work.var_scalar
 			generic map (size)
-			port map (clock, wren, rden, wpos, rpos, ivar(idx), ovar(idx));
+			port map (clock, wren, rden, wpos, rpos,
+				isgn(idx), osgn(idx),
+				imag(idx), omag(idx));
 	end generate;
 end rtl;
 

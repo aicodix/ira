@@ -16,10 +16,10 @@ entity bnl_vector is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		isgn : in sgn_vector;
-		osgn : out sgn_vector;
-		imag : in mag_vector;
-		omag : out mag_vector
+		isgn : in sign_vector;
+		osgn : out sign_vector;
+		imag : in cmag_vector;
+		omag : out cmag_vector
 	);
 end bnl_vector;
 

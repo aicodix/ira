@@ -15,10 +15,12 @@ entity cnp_vector is
 		valid : out boolean := false;
 		iseq : in sequence_scalar;
 		oseq : out sequence_scalar;
-		isft : in soft_vector;
-		osft : out soft_vector;
-		osgn : out sgn_vector;
-		omag : out mag_vector;
+		ivsgn : in sign_vector;
+		ivmag : in vmag_vector;
+		ovsgn : out sign_vector;
+		ovmag : out vmag_vector;
+		ocsgn : out sign_vector;
+		ocmag : out cmag_vector;
 		iwdf : in boolean;
 		owdf : out boolean;
 		iloc : in location_scalar;
@@ -32,15 +34,14 @@ end cnp_vector;
 
 architecture rtl of cnp_vector is
 	type two_min_scalar is record
-		lo, hi : mag_scalar;
+		lo, hi : cmag_scalar;
 	end record;
 	type two_min_vector is array (0 to vector_scalars-1) of two_min_scalar;
 	signal imin, dmin, omin : two_min_vector;
-	signal ipty, dpty, opty : sgn_vector;
+	signal ipty, dpty, opty : sign_vector;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal num : num_scalar := num_scalar'high;
-	signal isgn : sgn_vector;
-	signal imag : mag_vector;
+	signal icmag : cmag_vector;
 	signal this_count, prev_count : count_scalar;
 	signal seq, dseq : sequence_scalar;
 	signal this_start, prev_start : boolean := false;
@@ -51,12 +52,12 @@ architecture rtl of cnp_vector is
 
 	signal buf_wren : boolean := false;
 	signal buf_addr : natural range 0 to degree_max-1;
-	signal buf_isft : soft_vector;
-	signal buf_osft : soft_vector;
-	signal buf_isgn : sgn_vector;
-	signal buf_osgn : sgn_vector;
-	signal buf_imag : mag_vector;
-	signal buf_omag : mag_vector;
+	signal buf_ivsgn : sign_vector;
+	signal buf_ovsgn : sign_vector;
+	signal buf_ivmag : vmag_vector;
+	signal buf_ovmag : vmag_vector;
+	signal buf_icmag : cmag_vector;
+	signal buf_ocmag : cmag_vector;
 	signal buf_iwdf : boolean;
 	signal buf_owdf : boolean;
 	signal buf_iloc : location_scalar;
@@ -66,33 +67,21 @@ architecture rtl of cnp_vector is
 	signal buf_ishi : shift_scalar;
 	signal buf_oshi : shift_scalar;
 
-	function ms (val : soft_scalar) return mag_scalar is
-		constant max : integer := mag_scalar'high;
-		constant min : integer := -max;
-	begin
-		if val < min or val > max then
-			return mag_scalar'high;
-		else
-			return abs(val);
-		end if;
-	end function;
-
-	function oms (val : soft_scalar) return mag_scalar is
+	function oms (val : vmag_scalar) return cmag_scalar is
 		constant beta : integer := 1;
-		constant max : integer := mag_scalar'high + beta;
-		constant min : integer := -max;
+		constant max : integer := cmag_scalar'high + beta;
 	begin
-		if val < min or val > max then
-			return mag_scalar'high;
-		elsif abs(val) < beta then
+		if val > max then
+			return cmag_scalar'high;
+		elsif val < beta then
 			return 0;
 		else
-			return abs(val) - beta;
+			return val - beta;
 		end if;
 	end function;
 
-	function oms (val : soft_vector) return mag_vector is
-		variable tmp : mag_vector;
+	function oms (val : vmag_vector) return cmag_vector is
+		variable tmp : cmag_vector;
 	begin
 		for idx in tmp'range loop
 			tmp(idx) := oms(val(idx));
@@ -100,8 +89,8 @@ architecture rtl of cnp_vector is
 		return tmp;
 	end function;
 
-	function other (mag : mag_scalar; min : two_min_scalar) return mag_scalar is
-		variable tmp : mag_scalar;
+	function other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar is
+		variable tmp : cmag_scalar;
 	begin
 		if mag = min.lo then
 			return min.hi;
@@ -110,8 +99,8 @@ architecture rtl of cnp_vector is
 		end if;
 	end function;
 
-	function other (mag : mag_vector; min : two_min_vector) return mag_vector is
-		variable tmp : mag_vector;
+	function other (mag : cmag_vector; min : two_min_vector) return cmag_vector is
+		variable tmp : cmag_vector;
 	begin
 		for idx in tmp'range loop
 			tmp(idx) := other(mag(idx), min(idx));
@@ -119,21 +108,7 @@ architecture rtl of cnp_vector is
 		return tmp;
 	end function;
 
-	function neg (val : soft_scalar) return boolean is
-	begin
-		return val < 0;
-	end function;
-
-	function neg (val : soft_vector) return sgn_vector is
-		variable tmp : sgn_vector;
-	begin
-		for idx in tmp'range loop
-			tmp(idx) := neg(val(idx));
-		end loop;
-		return tmp;
-	end function;
-
-	function two_min (mag : mag_scalar; min : two_min_scalar) return two_min_scalar is
+	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar is
 		variable tmp : two_min_scalar;
 	begin
 		if mag < min.lo then
@@ -145,10 +120,10 @@ architecture rtl of cnp_vector is
 		end if;
 	end function;
 
-	function two_min (mag : mag_vector; min : two_min_vector) return two_min_vector is
+	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector is
 		variable tmp : two_min_vector;
 	begin
-		for idx in mag_vector'range loop
+		for idx in cmag_vector'range loop
 			tmp(idx) := two_min(mag(idx), min(idx));
 		end loop;
 		return tmp;
@@ -157,19 +132,19 @@ begin
 	buf_inst : entity work.buf_vector
 		port map (clock,
 			buf_wren, buf_addr,
-			buf_isft, buf_osft,
-			buf_isgn, buf_osgn,
-			buf_imag, buf_omag,
+			buf_ivsgn, buf_ovsgn,
+			buf_ivmag, buf_ovmag,
+			buf_icmag, buf_ocmag,
 			buf_iwdf, buf_owdf,
 			buf_iloc, buf_oloc,
 			buf_ioff, buf_ooff,
 			buf_ishi, buf_oshi);
 
-	imag <= oms(isft);
-	isgn <= neg(isft);
-	osft <= buf_osft;
-	omag <= other(buf_omag, omin);
-	osgn <= buf_osgn xor opty;
+	icmag <= oms(ivmag);
+	ovsgn <= buf_ovsgn;
+	ovmag <= buf_ovmag;
+	ocmag <= other(buf_ocmag, omin);
+	ocsgn <= buf_ovsgn xor opty;
 	owdf <= buf_owdf;
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;
@@ -202,7 +177,7 @@ begin
 				end if;
 				dmin <= imin;
 				dpty <= ipty;
-				imin <= (others => (mag_scalar'high, mag_scalar'high));
+				imin <= (others => (cmag_scalar'high, cmag_scalar'high));
 				ipty <= (others => false);
 			elsif num /= num_scalar'high then
 				num <= num + 1;
@@ -219,8 +194,8 @@ begin
 					end if;
 				end if;
 				if okay then
-					imin <= two_min(imag, imin);
-					ipty <= ipty xor isgn;
+					imin <= two_min(icmag, imin);
+					ipty <= ipty xor ivsgn;
 				end if;
 				if num = 0 then
 					dvalid <= prev_start;
@@ -229,9 +204,9 @@ begin
 				end if;
 				buf_wren <= true;
 				buf_addr <= num;
-				buf_isft <= isft;
-				buf_imag <= imag;
-				buf_isgn <= isgn;
+				buf_ivsgn <= ivsgn;
+				buf_ivmag <= ivmag;
+				buf_icmag <= icmag;
 				buf_iwdf <= iwdf;
 				buf_iloc <= iloc;
 				buf_ioff <= ioff;

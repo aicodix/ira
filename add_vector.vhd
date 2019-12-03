@@ -10,10 +10,12 @@ entity add_vector is
 	port (
 		clock : in std_logic;
 		clken : in boolean;
-		isft : in soft_vector;
-		isgn : in sgn_vector;
-		imag : in mag_vector;
-		osft : out soft_vector
+		ivsgn : in sign_vector;
+		ivmag : in vmag_vector;
+		icsgn : in sign_vector;
+		icmag : in cmag_vector;
+		ovsgn : out sign_vector;
+		ovmag : out vmag_vector
 	);
 end add_vector;
 
@@ -22,8 +24,9 @@ begin
 	vector_inst : for idx in soft_vector'range generate
 		scalar_inst : entity work.add_scalar
 			port map (clock, clken,
-				isft(idx), isgn(idx), imag(idx),
-				osft(idx));
+				ivsgn(idx), ivmag(idx),
+				icsgn(idx), icmag(idx),
+				ovsgn(idx), ovmag(idx));
 	end generate;
 end rtl;
 
