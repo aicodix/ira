@@ -46,18 +46,6 @@ architecture rtl of buf_vector is
 	type shis_array is array (0 to degree_max-1) of shift_scalar;
 	signal shis : shis_array;
 begin
-	osft_gen : for idx in osft'range generate
-		osft(idx) <= sfts(idx)(addr);
-	end generate;
-	omag_gen : for idx in omag'range generate
-		omag(idx) <= mags(idx)(addr);
-	end generate;
-	osgn <= sgns(addr);
-	owdf <= wdfs(addr);
-	oloc <= locs(addr);
-	ooff <= offs(addr);
-	oshi <= shis(addr);
-
 	process (clock)
 	begin
 		if rising_edge(clock) then
@@ -74,6 +62,17 @@ begin
 				offs(addr) <= ioff;
 				shis(addr) <= ishi;
 			end if;
+			for idx in osft'range loop
+				osft(idx) <= sfts(idx)(addr);
+			end loop;
+			for idx in omag'range loop
+				omag(idx) <= mags(idx)(addr);
+			end loop;
+			osgn <= sgns(addr);
+			owdf <= wdfs(addr);
+			oloc <= locs(addr);
+			ooff <= offs(addr);
+			oshi <= shis(addr);
 		end if;
 	end process;
 end rtl;

@@ -35,16 +35,17 @@ architecture rtl of cnp_vector is
 		lo, hi : mag_scalar;
 	end record;
 	type two_min_vector is array (0 to vector_scalars-1) of two_min_scalar;
-	signal imin, omin : two_min_vector;
-	signal ipty, opty : sgn_vector;
+	signal imin, dmin, omin : two_min_vector;
+	signal ipty, dpty, opty : sgn_vector;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal num : num_scalar := num_scalar'high;
 	signal isgn : sgn_vector;
 	signal imag : mag_vector;
 	signal this_count, prev_count : count_scalar;
-	signal seq : sequence_scalar;
+	signal seq, dseq : sequence_scalar;
 	signal this_start, prev_start : boolean := false;
 	signal okay : boolean := true;
+	signal dvalid : boolean := false;
 	signal shorter : boolean;
 	signal finalize : boolean;
 
@@ -178,14 +179,18 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
+			valid <= dvalid;
+			oseq <= dseq;
+			omin <= dmin;
+			opty <= dpty;
 			if start or finalize then
 				num <= 0;
-				valid <= false;
+				dvalid <= false;
 				buf_wren <= false;
 				prev_start <= this_start;
 				this_start <= start;
 				prev_count <= this_count;
-				oseq <= seq;
+				dseq <= seq;
 				seq <= iseq;
 				if start then
 					this_count <= count;
@@ -195,8 +200,8 @@ begin
 					shorter <= true;
 					busy <= true;
 				end if;
-				omin <= imin;
-				opty <= ipty;
+				dmin <= imin;
+				dpty <= ipty;
 				imin <= (others => (mag_scalar'high, mag_scalar'high));
 				ipty <= (others => false);
 			elsif num /= num_scalar'high then
@@ -218,9 +223,9 @@ begin
 					ipty <= ipty xor isgn;
 				end if;
 				if num = 0 then
-					valid <= prev_start;
+					dvalid <= prev_start;
 				elsif num = prev_count then
-					valid <= false;
+					dvalid <= false;
 				end if;
 				buf_wren <= true;
 				buf_addr <= num;
@@ -232,7 +237,7 @@ begin
 				buf_ioff <= ioff;
 				buf_ishi <= ishi;
 			else
-				valid <= false;
+				dvalid <= false;
 				buf_wren <= false;
 			end if;
 		end if;
