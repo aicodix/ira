@@ -27,5 +27,110 @@ package ldpc is
 	type sign_vector is array (0 to vector_scalars-1) of boolean;
 	type cmag_vector is array (0 to vector_scalars-1) of cmag_scalar;
 	type vmag_vector is array (0 to vector_scalars-1) of vmag_scalar;
+	type vsft_scalar is record
+		sgn : boolean;
+		mag : vmag_scalar;
+	end record;
+	type csft_scalar is record
+		sgn : boolean;
+		mag : cmag_scalar;
+	end record;
+	type vsft_vector is array (0 to vector_scalars-1) of vsft_scalar;
+	type csft_vector is array (0 to vector_scalars-1) of csft_scalar;
+	function soft_to_vsft (val : soft_scalar) return vsft_scalar;
+	function csft_to_soft (val : csft_scalar) return soft_scalar;
+	function vsft_to_soft (val : vsft_scalar) return soft_scalar;
+	function soft_to_vsft (val : soft_vector) return vsft_vector;
+	function csft_to_soft (val : csft_vector) return soft_vector;
+	function vsft_to_soft (val : vsft_vector) return soft_vector;
+	function sign_of_vsft (val : vsft_vector) return sign_vector;
+	function vmag_of_vsft (val : vsft_vector) return vmag_vector;
+	function sign_and_cmag_to_csft (sgn : sign_vector; mag : cmag_vector) return csft_vector;
 end package;
+
+package body ldpc is
+	function soft_to_vsft (val : soft_scalar) return vsft_scalar is
+		variable tmp : vsft_scalar;
+	begin
+		tmp.sgn := val < 0;
+		if abs(val) > vmag_scalar'high then
+			tmp.mag := vmag_scalar'high;
+		else
+			tmp.mag := abs(val);
+		end if;
+		return tmp;
+	end function;
+
+	function csft_to_soft (val : csft_scalar) return soft_scalar is
+	begin
+		if val.sgn then
+			return -val.mag;
+		else
+			return val.mag;
+		end if;
+	end function;
+
+	function vsft_to_soft (val : vsft_scalar) return soft_scalar is
+	begin
+		if val.sgn then
+			return -val.mag;
+		else
+			return val.mag;
+		end if;
+	end function;
+
+	function soft_to_vsft (val : soft_vector) return vsft_vector is
+		variable tmp : vsft_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := soft_to_vsft(val(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function csft_to_soft (val : csft_vector) return soft_vector is
+		variable tmp : soft_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := csft_to_soft(val(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function vsft_to_soft (val : vsft_vector) return soft_vector is
+		variable tmp : soft_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := vsft_to_soft(val(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function sign_of_vsft (val : vsft_vector) return sign_vector is
+		variable tmp : sign_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := val(idx).sgn;
+		end loop;
+		return tmp;
+	end function;
+
+	function vmag_of_vsft (val : vsft_vector) return vmag_vector is
+		variable tmp : vmag_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := val(idx).mag;
+		end loop;
+		return tmp;
+	end function;
+
+	function sign_and_cmag_to_csft (sgn : sign_vector; mag : cmag_vector) return csft_vector is
+		variable tmp : csft_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := (sgn(idx), mag(idx));
+		end loop;
+		return tmp;
+	end function;
+end package body;
 

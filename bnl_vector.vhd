@@ -16,10 +16,8 @@ entity bnl_vector is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		isgn : in sign_vector;
-		osgn : out sign_vector;
-		imag : in cmag_vector;
-		omag : out cmag_vector
+		isft : in csft_vector;
+		osft : out csft_vector
 	);
 end bnl_vector;
 
@@ -29,8 +27,7 @@ begin
 		scalar_inst : entity work.bnl_scalar
 			generic map (size)
 			port map (clock, wren, rden, wpos, rpos,
-				isgn(idx), osgn(idx),
-				imag(idx), omag(idx));
+				isft(idx), osft(idx));
 	end generate;
 end rtl;
 

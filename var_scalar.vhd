@@ -16,29 +16,23 @@ entity var_scalar is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		isgn : in boolean;
-		osgn : out boolean;
-		imag : in vmag_scalar;
-		omag : out vmag_scalar
+		isft : in vsft_scalar;
+		osft : out vsft_scalar
 	);
 end var_scalar;
 
 architecture rtl of var_scalar is
-	type sign_array is array (0 to size-1) of boolean;
-	signal sgns : sign_array;
-	type vmag_array is array (0 to size-1) of vmag_scalar;
-	signal mags : vmag_array;
+	type vsft_array is array (0 to size-1) of vsft_scalar;
+	signal sfts : vsft_array;
 begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if wren then
-				sgns(wpos) <= isgn;
-				mags(wpos) <= imag;
+				sfts(wpos) <= isft;
 			end if;
 			if rden then
-				osgn <= sgns(rpos);
-				omag <= mags(rpos);
+				osft <= sfts(rpos);
 			end if;
 		end if;
 	end process;

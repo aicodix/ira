@@ -14,20 +14,16 @@ entity fub_scalar is
 		clock : in std_logic;
 		wren : in boolean;
 		addr : in natural range 0 to size-1;
-		ivsgn : in boolean;
-		ovsgn : out boolean;
-		ivmag : in vmag_scalar;
-		ovmag : out vmag_scalar;
+		ivsft : in vsft_scalar;
+		ovsft : out vsft_scalar;
 		icmag : in cmag_scalar;
 		ocmag : out cmag_scalar
 	);
 end fub_scalar;
 
 architecture rtl of fub_scalar is
-	type sign_array is array (0 to size-1) of boolean;
-	signal vsgns : sign_array;
-	type vmag_array is array (0 to size-1) of vmag_scalar;
-	signal vmags : vmag_array;
+	type vsft_array is array (0 to size-1) of vsft_scalar;
+	signal vsfts : vsft_array;
 	type cmag_array is array (0 to size-1) of cmag_scalar;
 	signal cmags : cmag_array;
 begin
@@ -35,12 +31,10 @@ begin
 	begin
 		if rising_edge(clock) then
 			if wren then
-				vsgns(addr) <= ivsgn;
-				vmags(addr) <= ivmag;
+				vsfts(addr) <= ivsft;
 				cmags(addr) <= icmag;
 			end if;
-			ovsgn <= vsgns(addr);
-			ovmag <= vmags(addr);
+			ovsft <= vsfts(addr);
 			ocmag <= cmags(addr);
 		end if;
 	end process;

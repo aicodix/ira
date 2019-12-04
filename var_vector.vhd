@@ -16,10 +16,8 @@ entity var_vector is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		isgn : in sign_vector;
-		osgn : out sign_vector;
-		imag : in vmag_vector;
-		omag : out vmag_vector
+		isft : in vsft_vector;
+		osft : out vsft_vector
 	);
 end var_vector;
 
@@ -29,8 +27,7 @@ begin
 		scalar_inst : entity work.var_scalar
 			generic map (size)
 			port map (clock, wren, rden, wpos, rpos,
-				isgn(idx), osgn(idx),
-				imag(idx), omag(idx));
+				isft(idx), osft(idx));
 	end generate;
 end rtl;
 

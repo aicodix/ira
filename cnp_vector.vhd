@@ -15,12 +15,9 @@ entity cnp_vector is
 		valid : out boolean := false;
 		iseq : in sequence_scalar;
 		oseq : out sequence_scalar;
-		ivsgn : in sign_vector;
-		ivmag : in vmag_vector;
-		ovsgn : out sign_vector;
-		ovmag : out vmag_vector;
-		ocsgn : out sign_vector;
-		ocmag : out cmag_vector;
+		ivsft : in vsft_vector;
+		ovsft : out vsft_vector;
+		ocsft : out csft_vector;
 		iwdf : in boolean;
 		owdf : out boolean;
 		iloc : in location_scalar;
@@ -52,10 +49,8 @@ architecture rtl of cnp_vector is
 
 	signal buf_wren : boolean := false;
 	signal buf_addr : natural range 0 to degree_max-1;
-	signal buf_ivsgn : sign_vector;
-	signal buf_ovsgn : sign_vector;
-	signal buf_ivmag : vmag_vector;
-	signal buf_ovmag : vmag_vector;
+	signal buf_ivsft : vsft_vector;
+	signal buf_ovsft : vsft_vector;
 	signal buf_icmag : cmag_vector;
 	signal buf_ocmag : cmag_vector;
 	signal buf_iwdf : boolean;
@@ -132,19 +127,16 @@ begin
 	buf_inst : entity work.buf_vector
 		port map (clock,
 			buf_wren, buf_addr,
-			buf_ivsgn, buf_ovsgn,
-			buf_ivmag, buf_ovmag,
+			buf_ivsft, buf_ovsft,
 			buf_icmag, buf_ocmag,
 			buf_iwdf, buf_owdf,
 			buf_iloc, buf_oloc,
 			buf_ioff, buf_ooff,
 			buf_ishi, buf_oshi);
 
-	icmag <= oms(ivmag);
-	ovsgn <= buf_ovsgn;
-	ovmag <= buf_ovmag;
-	ocmag <= other(buf_ocmag, omin);
-	ocsgn <= buf_ovsgn xor opty;
+	icmag <= oms(vmag_of_vsft(ivsft));
+	ovsft <= buf_ovsft;
+	ocsft <= sign_and_cmag_to_csft(opty xor sign_of_vsft(buf_ovsft), other(buf_ocmag, omin));
 	owdf <= buf_owdf;
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;
@@ -195,7 +187,7 @@ begin
 				end if;
 				if okay then
 					imin <= two_min(icmag, imin);
-					ipty <= ipty xor ivsgn;
+					ipty <= ipty xor sign_of_vsft(ivsft);
 				end if;
 				if num = 0 then
 					dvalid <= prev_start;
@@ -204,8 +196,7 @@ begin
 				end if;
 				buf_wren <= true;
 				buf_addr <= num;
-				buf_ivsgn <= ivsgn;
-				buf_ivmag <= ivmag;
+				buf_ivsft <= ivsft;
 				buf_icmag <= icmag;
 				buf_iwdf <= iwdf;
 				buf_iloc <= iloc;

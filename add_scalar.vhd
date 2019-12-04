@@ -10,37 +10,40 @@ entity add_scalar is
 	port (
 		clock : in std_logic;
 		clken : in boolean;
-		ivsgn : in boolean;
-		ivmag : in vmag_scalar;
-		icsgn : in boolean;
-		icmag : in cmag_scalar;
-		ovsgn : out boolean;
-		ovmag : out vmag_scalar
+		ivsft : in vsft_scalar;
+		icsft : in csft_scalar;
+		ovsft : out vsft_scalar
 	);
 end add_scalar;
 
 architecture rtl of add_scalar is
+	function add (vsft : vsft_scalar; csft : csft_scalar) return vsft_scalar is
+		variable tmp : vsft_scalar;
+	begin
+		if vsft.sgn = csft.sgn then
+			tmp.sgn := vsft.sgn;
+			if vsft.mag + csft.mag > vmag_scalar'high then
+				tmp.mag := vmag_scalar'high;
+			else
+				tmp.mag := vsft.mag + csft.mag;
+			end if;
+		else
+			if vsft.mag > csft.mag then
+				tmp.sgn := vsft.sgn;
+				tmp.mag := vsft.mag - csft.mag;
+			else
+				tmp.sgn := csft.sgn;
+				tmp.mag := csft.mag - vsft.mag;
+			end if;
+		end if;
+		return tmp;
+	end function;
 begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if clken then
-				if ivsgn = icsgn then
-					if ivmag + icmag > vmag_scalar'high then
-						ovmag <= vmag_scalar'high;
-					else
-						ovmag <= ivmag + icmag;
-					end if;
-					ovsgn <= ivsgn;
-				else
-					if ivmag > icmag then
-						ovmag <= ivmag - icmag;
-						ovsgn <= ivsgn;
-					else
-						ovmag <= icmag - ivmag;
-						ovsgn <= icsgn;
-					end if;
-				end if;
+				ovsft <= add(ivsft, icsft);
 			end if;
 		end if;
 	end process;

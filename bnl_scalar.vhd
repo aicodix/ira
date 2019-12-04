@@ -16,29 +16,23 @@ entity bnl_scalar is
 		rden : in boolean;
 		wpos : in natural range 0 to size-1;
 		rpos : in natural range 0 to size-1;
-		isgn : in boolean;
-		osgn : out boolean;
-		imag : in cmag_scalar;
-		omag : out cmag_scalar
+		isft : in csft_scalar;
+		osft : out csft_scalar
 	);
 end bnl_scalar;
 
 architecture rtl of bnl_scalar is
-	type sgn_array is array (0 to size-1) of boolean;
-	signal sgns : sgn_array;
-	type cmag_array is array (0 to size-1) of cmag_scalar;
-	signal mags : cmag_array;
+	type csft_array is array (0 to size-1) of csft_scalar;
+	signal sfts : csft_array;
 begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if wren then
-				sgns(wpos) <= isgn;
-				mags(wpos) <= imag;
+				sfts(wpos) <= isft;
 			end if;
 			if rden then
-				osgn <= sgns(rpos);
-				omag <= mags(rpos);
+				osft <= sfts(rpos);
 			end if;
 		end if;
 	end process;

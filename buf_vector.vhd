@@ -11,10 +11,8 @@ entity buf_vector is
 		clock : in std_logic;
 		wren : in boolean;
 		addr : in natural range 0 to degree_max-1;
-		ivsgn : in sign_vector;
-		ovsgn : out sign_vector;
-		ivmag : in vmag_vector;
-		ovmag : out vmag_vector;
+		ivsft : in vsft_vector;
+		ovsft : out vsft_vector;
 		icmag : in cmag_vector;
 		ocmag : out cmag_vector;
 		iwdf : in boolean;
@@ -42,8 +40,7 @@ begin
 		scalar_inst : entity work.fub_scalar
 			generic map (degree_max)
 			port map (clock, wren, addr,
-				ivsgn(idx), ovsgn(idx),
-				ivmag(idx), ovmag(idx),
+				ivsft(idx), ovsft(idx),
 				icmag(idx), ocmag(idx));
 	end generate;
 
