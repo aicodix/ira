@@ -26,9 +26,17 @@ dec_vector_tb: work/work-obj93.cf
 work/generate_random_noise: generate_random_noise.cc *.hh | work
 	$(CXX) $< -o $@
 
+.PRECIOUS: work/generate_table_vhd
+work/generate_table_vhd: generate_table_vhd.cc | work
+	$(CXX) $< -o $@
+
 .PRECIOUS: soft_input.txt
 soft_input.txt: work/generate_random_noise
 	work/generate_random_noise
+
+.PRECIOUS: table.vhd
+table.vhd: table.txt work/generate_table_vhd
+	work/generate_table_vhd
 
 work:
 	mkdir $@

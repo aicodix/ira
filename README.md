@@ -44,7 +44,7 @@ The following rules must apply to the table for the decoder to work correctly:
 
 ### [table.vhd](table.vhd)
 
-Quick and dirty code table generated from [table.txt](table.txt)
+code table generated from [table.txt](table.txt) by [generate_table_vhd.cc](generate_table_vhd.cc)
 
 ### [dec_vector_tb.vhd](dec_vector_tb.vhd)
 
@@ -67,6 +67,10 @@ buffer for the vector check node processor
 ### [generate_random_noise.cc](generate_random_noise.cc)
 
 Generate random noise
+
+### [generate_table_vhd.cc](generate_table_vhd.cc)
+
+Generate [table.vhd](table.vhd) from [table.txt](table.txt)
 
 ### [add_scalar.vhd](add_scalar.vhd)
 
