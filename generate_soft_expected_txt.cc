@@ -1,5 +1,5 @@
 /*
-Generate random noise
+Generate soft_expected.txt decoded from soft_input.txt
 
 Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
@@ -40,17 +40,13 @@ int main()
 			table_txt >> shifts[loc];
 		}
 	}
-	std::random_device rd;
-	std::default_random_engine generator(rd());
-	typedef std::uniform_int_distribution<int> uniform;
-	auto input = std::bind(uniform(-128, 127), generator);
-	std::ofstream soft_input("soft_input.txt");
+	std::ifstream soft_input("soft_input.txt");
 	std::ofstream soft_output("soft_expected.txt");
-	for (int i = 0; i < CODES; ++i) {
+	while (soft_input.good()) {
 		int inp[CODE_SCALARS], out[CODE_SCALARS];
 		for (int j = 0; j < CODE_SCALARS; ++j)
-			soft_input << '\t' << (inp[j] = input());
-		soft_input << std::endl;
+			if (!(soft_input >> inp[j]))
+				return 0;
 		dec(out, inp);
 		for (int j = 0; j < CODE_SCALARS; ++j)
 			soft_output << '\t' << out[j];

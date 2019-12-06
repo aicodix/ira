@@ -64,9 +64,13 @@ Look in [cnp](https://github.com/aicodix/cnp) repository for testbench.
 
 buffer for the vector check node processor
 
-### [generate_random_noise.cc](generate_random_noise.cc)
+### [generate_soft_input_txt.cc](generate_soft_input_txt.cc)
 
-Generate random noise
+Generate [soft_input.txt](soft_input.txt) from random noise
+
+### [generate_soft_expected_txt.cc](generate_soft_expected_txt.cc)
+
+Generate [soft_expected.txt](soft_expected.txt) decoded from [soft_input.txt](soft_input.txt)
 
 ### [generate_table_vhd.cc](generate_table_vhd.cc)
 
