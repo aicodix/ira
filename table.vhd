@@ -5,13 +5,9 @@
 use work.ldpc.all;
 
 package table is
-	type offsets is array (0 to locations_max-1) of offset_scalar;
 	function init_offsets return offsets;
-	type shifts is array (0 to locations_max-1) of shift_scalar;
 	function init_shifts return shifts;
-	type counts is array (0 to parities_max-1) of count_scalar;
 	function init_counts return counts;
-	subtype parities is positive range parities_min to parities_max;
 	function init_parities return parities;
 end package;
 

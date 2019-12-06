@@ -23,6 +23,10 @@ package ldpc is
 	subtype location_scalar is natural range 0 to locations_max-1;
 	subtype offset_scalar is natural range 0 to code_vectors-1;
 	subtype shift_scalar is natural range 0 to vector_scalars-1;
+	subtype parities is positive range parities_min to parities_max;
+	type counts is array (0 to parities_max-1) of count_scalar;
+	type offsets is array (0 to locations_max-1) of offset_scalar;
+	type shifts is array (0 to locations_max-1) of shift_scalar;
 	type soft_vector is array (0 to vector_scalars-1) of soft_scalar;
 	type sign_vector is array (0 to vector_scalars-1) of boolean;
 	type cmag_vector is array (0 to vector_scalars-1) of cmag_scalar;
