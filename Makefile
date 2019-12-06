@@ -31,11 +31,11 @@ work/generate_table_vhd: generate_table_vhd.cc | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: soft_input.txt
-soft_input.txt: work/generate_random_noise
+soft_input.txt: table.txt | work/generate_random_noise
 	work/generate_random_noise
 
 .PRECIOUS: table.vhd
-table.vhd: table.txt work/generate_table_vhd
+table.vhd: table.txt | work/generate_table_vhd
 	work/generate_table_vhd
 
 work:
