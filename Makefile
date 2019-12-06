@@ -23,7 +23,7 @@ dec_vector_tb: work/work-obj93.cf
 	$(GHDL) -m --workdir=work $@
 
 .PRECIOUS: work/generate_random_noise
-work/generate_random_noise: generate_random_noise.cc | work
+work/generate_random_noise: generate_random_noise.cc *.hh | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: soft_input.txt
