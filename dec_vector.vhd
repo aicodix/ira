@@ -491,7 +491,7 @@ begin
 			out_stage(5) <= out_stage(4);
 			if out_stage(5) and not out_stage(4) then
 				var_wren <= false;
-				if not inp_stage(inp_stage'high) then
+				if not inp_stage(inp_stage'high) and not cnp_busy then
 					busy <= false;
 				end if;
 			end if;
