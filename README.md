@@ -36,7 +36,11 @@ LDPC decoder configuration
 
 ### [table.txt](table.txt)
 
-Transformed DVB T2 B7 code table for vector length of 15
+Transformed and manipulated DVB T2 B7 code table for vector length of 15:
+
+* Rows are sorted by location offsets to keep same offsets consecutive.
+* Above sorting helps maximally spacing out same offsets on consecutive columns.
+* Manually swapped columns to avoid same offsets on consecutive columns.
 
 The following rules must apply to the table for the decoder to work correctly:
 
