@@ -19,7 +19,7 @@ entity dec_vector is
 end dec_vector;
 
 architecture rtl of dec_vector is
-	signal swap_cb : natural range 0 to code_blocks := code_blocks;
+	signal swap_cv : natural range 0 to code_vectors := code_vectors;
 	signal swap_bv : natural range 0 to block_vectors-1;
 	subtype vector_index is natural range 0 to vector_scalars-1;
 	signal swap_vs : vector_index;
@@ -187,29 +187,29 @@ begin
 	begin
 		if rising_edge(clock) then
 			if istart then
-				swap_cb <= 0;
+				swap_cv <= 0;
 				swap_bv <= 0;
 				swap_vs <= 0;
 				swap_start_d(1) <= prev_start;
 				prev_start <= istart;
 				swap_stage(0) <= true;
-			elsif swap_cb /= code_blocks then
+			elsif swap_cv /= code_vectors then
 				swap_start_d(1) <= false;
 				if swap_bv = block_vectors-1 then
 					swap_bv <= 0;
 					if swap_vs = vector_scalars-1 then
 						swap_vs <= 0;
-						swap_cb <= swap_cb + 1;
+						swap_cv <= swap_cv + block_vectors;
 					else
 						swap_vs <= swap_vs + 1;
 					end if;
 				else
 					swap_bv <= swap_bv + 1;
 				end if;
-				if swap_cb = code_blocks-1 and swap_bv = block_vectors-2 and swap_vs = vector_scalars-1 then
+				if swap_cv = code_vectors-block_vectors and swap_bv = block_vectors-2 and swap_vs = vector_scalars-1 then
 					busy <= true;
 				end if;
-				if swap_cb = code_blocks-1 and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
+				if swap_cv = code_vectors-block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
 					swap_stage(0) <= false;
 				end if;
 			end if;
@@ -218,8 +218,8 @@ begin
 				swap_vs_d(1) <= swap_vs;
 				swap_start_d(2) <= swap_start_d(1);
 				swap_soft_d(1) <= isoft;
-				swap_pos <= block_vectors * swap_cb + swap_bv;
-				var_rpos <= block_vectors * swap_cb + swap_bv;
+				swap_pos <= swap_cv + swap_bv;
+				var_rpos <= swap_cv + swap_bv;
 			end if;
 
 			swap_stage(1) <= swap_stage(0);
