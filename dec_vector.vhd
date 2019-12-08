@@ -20,9 +20,9 @@ end dec_vector;
 
 architecture rtl of dec_vector is
 	signal swap_cv : natural range 0 to code_vectors := code_vectors;
+	signal swap_vs : natural range 0 to vector_scalars := vector_scalars;
 	signal swap_bv : natural range 0 to block_vectors-1;
 	subtype vector_index is natural range 0 to vector_scalars-1;
-	signal swap_vs : vector_index;
 	type swap_vs_delays is array (1 to 2) of vector_index;
 	signal swap_vs_d : swap_vs_delays;
 	signal prev_vsft : vsft_scalar;
@@ -64,6 +64,7 @@ architecture rtl of dec_vector is
 	signal add_ivsft, add_ovsft : vsft_vector;
 	signal add_icsft : csft_vector;
 	signal ptys : parities := init_parities;
+	signal msgs : messages := CODE_VECTORS - init_parities;
 	signal inp_pty : natural range 0 to parities_max;
 	signal prev_start : boolean := false;
 	type swap_start_delays is array (1 to 2) of boolean;
@@ -193,7 +194,7 @@ begin
 				swap_start_d(1) <= prev_start;
 				prev_start <= istart;
 				swap_stage(0) <= true;
-			elsif swap_cv /= code_vectors then
+			elsif swap_cv < msgs then
 				swap_start_d(1) <= false;
 				if swap_bv = block_vectors-1 then
 					swap_bv <= 0;
@@ -206,12 +207,26 @@ begin
 				else
 					swap_bv <= swap_bv + 1;
 				end if;
-				if swap_cv = code_vectors-block_vectors and swap_bv = block_vectors-2 and swap_vs = vector_scalars-1 then
+--				report "MSG" & HT & integer'image(swap_cv) & HT & integer'image(swap_bv) & HT & integer'image(swap_vs);
+			elsif swap_vs /= vector_scalars then
+				if swap_cv = code_vectors-block_vectors then
+					swap_cv <= msgs;
+					if swap_bv = block_vectors-1 then
+						swap_bv <= 0;
+						swap_vs <= swap_vs + 1;
+					else
+						swap_bv <= swap_bv + 1;
+					end if;
+				else
+					swap_cv <= swap_cv + block_vectors;
+				end if;
+				if swap_cv = code_vectors-2*block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
 					busy <= true;
 				end if;
 				if swap_cv = code_vectors-block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
 					swap_stage(0) <= false;
 				end if;
+--				report "PTY" & HT & integer'image(swap_cv) & HT & integer'image(swap_bv) & HT & integer'image(swap_vs);
 			end if;
 
 			if swap_stage(0) then

@@ -47,10 +47,18 @@ void cnp(int (*output)[VECTOR_SCALARS], const int (*input)[VECTOR_SCALARS], int 
 void dec(int *output, const int *input)
 {
 	int vars[CODE_VECTORS][VECTOR_SCALARS];
-	for (int i = 0; i < CODE_BLOCKS; ++i)
+	int q = parities / BLOCK_VECTORS;
+	for (int i = 0; i < CODE_BLOCKS - q; ++i)
 		for (int j = 0; j < BLOCK_VECTORS; ++j)
 			for (int n = 0; n < VECTOR_SCALARS; ++n)
 				vars[BLOCK_VECTORS*i+j][n] = min(max(input[BLOCK_SCALARS*i+BLOCK_VECTORS*n+j], -VMAG_MAX), VMAG_MAX);
+	int R = parities * VECTOR_SCALARS;
+	int K = CODE_SCALARS - R;
+	int messages = CODE_VECTORS - parities;
+	for (int i = 0; i < q; ++i)
+		for (int j = 0; j < BLOCK_VECTORS; ++j)
+			for (int n = 0; n < VECTOR_SCALARS; ++n)
+				vars[messages+BLOCK_VECTORS*i+j][n] = min(max(input[K+q*(BLOCK_VECTORS*n+j)+i], -VMAG_MAX), VMAG_MAX);
 	int wd_flags[LOCATIONS_MAX];
 	int bnls[LOCATIONS_MAX][VECTOR_SCALARS];
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
@@ -109,9 +117,13 @@ void dec(int *output, const int *input)
 			loc += cnt;
 		}
 	}
-	for (int i = 0; i < CODE_BLOCKS; ++i)
+	for (int i = 0; i < CODE_BLOCKS - q; ++i)
 		for (int j = 0; j < BLOCK_VECTORS; ++j)
 			for (int n = 0; n < VECTOR_SCALARS; ++n)
 				output[BLOCK_SCALARS*i+BLOCK_VECTORS*n+j] = vars[BLOCK_VECTORS*i+j][n];
+	for (int i = 0; i < q; ++i)
+		for (int j = 0; j < BLOCK_VECTORS; ++j)
+			for (int n = 0; n < VECTOR_SCALARS; ++n)
+				output[K+q*(BLOCK_VECTORS*n+j)+i] = vars[messages+BLOCK_VECTORS*i+j][n];
 }
 
