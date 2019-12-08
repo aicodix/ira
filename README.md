@@ -16,6 +16,7 @@ Run ```make vcd``` to generate waveforms and watch them via ```gtkwave dec_vecto
 
 ### TODO
 
+* Interleave parity part of message here?
 * Tool for generating code table entries
 * Tool for enforcing below rules for code table entries
 * Interface for switching or replacing code table
