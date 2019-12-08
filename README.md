@@ -28,6 +28,7 @@ Run ```make vcd``` to generate waveforms and watch them via ```gtkwave dec_vecto
 
 * Write disable flags to resolve write conflicts with DDSMs
 * Reference decoder in C++
+* Tool for checking code table entries for data hazards
 
 ### [ldpc.vhd](ldpc.vhd)
 
@@ -145,4 +146,8 @@ Check node processor reference code
 ### [dec_reference.hh](dec_reference.hh)
 
 IRA-LDPC decoder reference code
+
+### [check_table_txt.hh](check_table_txt.hh)
+
+check table.txt for data hazards
 

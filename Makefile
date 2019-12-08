@@ -22,6 +22,10 @@ dec_vector_tb.vcd: dec_vector_tb soft_input.txt
 dec_vector_tb: work/work-obj93.cf
 	$(GHDL) -m --workdir=work $@
 
+.PRECIOUS: work/check_table_txt
+work/check_table_txt: check_table_txt.cc | work
+	$(CXX) $< -o $@
+
 .PRECIOUS: work/generate_soft_input_txt
 work/generate_soft_input_txt: generate_soft_input_txt.cc | work
 	$(CXX) $< -o $@
@@ -43,7 +47,8 @@ soft_expected.txt: soft_input.txt table.txt | work/generate_soft_expected_txt
 	work/generate_soft_expected_txt
 
 .PRECIOUS: table.vhd
-table.vhd: table.txt | work/generate_table_vhd
+table.vhd: table.txt | work/check_table_txt work/generate_table_vhd
+	work/check_table_txt
 	work/generate_table_vhd
 
 work:
