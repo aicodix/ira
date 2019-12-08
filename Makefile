@@ -23,11 +23,11 @@ dec_vector_tb: work/work-obj93.cf
 	$(GHDL) -m --workdir=work $@
 
 .PRECIOUS: work/check_table_txt
-work/check_table_txt: check_table_txt.cc | work
+work/check_table_txt: check_table_txt.cc ldpc.hh | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: work/generate_soft_input_txt
-work/generate_soft_input_txt: generate_soft_input_txt.cc | work
+work/generate_soft_input_txt: generate_soft_input_txt.cc ldpc.hh | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: work/generate_soft_expected_txt
@@ -35,7 +35,7 @@ work/generate_soft_expected_txt: generate_soft_expected_txt.cc *.hh | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: work/generate_table_vhd
-work/generate_table_vhd: generate_table_vhd.cc | work
+work/generate_table_vhd: generate_table_vhd.cc ldpc.hh | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: soft_input.txt

@@ -5,16 +5,10 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
 
 #include <fstream>
+#include "ldpc.hh"
 
 int main()
 {
-	const int VECTOR_SCALARS = 15;
-	const int CODE_SCALARS = 16200;
-	const int TOTAL_LINKS_MAX = 75240;
-	const int LOCATIONS_MAX = TOTAL_LINKS_MAX / VECTOR_SCALARS;
-	const int CODE_VECTORS = CODE_SCALARS / VECTOR_SCALARS;
-	const int PARITIES_MAX = (CODE_VECTORS * 4) / 5;
-
 	int offsets[LOCATIONS_MAX];
 	int shifts[LOCATIONS_MAX];
 	int counts[PARITIES_MAX];

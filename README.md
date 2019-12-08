@@ -34,6 +34,10 @@ Run ```make vcd``` to generate waveforms and watch them via ```gtkwave dec_vecto
 
 LDPC decoder configuration
 
+### [ldpc.hh](ldpc.hh)
+
+LDPC decoder configuration
+
 ### [table.txt](table.txt)
 
 Transformed and manipulated DVB T2 B7 code table for vector length of 15:
