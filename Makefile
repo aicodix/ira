@@ -1,22 +1,34 @@
 
-GHDL = /opt/ghdl/bin/ghdl
+GHDL = ghdl
 
 .PHONY: run
-run: dec_expected.txt dec_output.txt
+run: cnp_expected.txt dec_expected.txt cnp_output.txt dec_output.txt
 
 .PHONY: vcd
-vcd: dec_vector_tb.vcd
+vcd: cnp_vector_tb.vcd dec_vector_tb.vcd
 
 work/work-obj93.cf: *.vhd | work
 	$(GHDL) -i --workdir=work $?
+
+.PRECIOUS: cnp_output.txt
+cnp_output.txt: cnp_vector_tb cnp_input.txt
+	$(GHDL) -r --workdir=work $<
 
 .PRECIOUS: dec_output.txt
 dec_output.txt: dec_vector_tb dec_input.txt
 	$(GHDL) -r --workdir=work $<
 
+.PRECIOUS: cnp_vector_tb.vcd
+cnp_vector_tb.vcd: cnp_vector_tb cnp_input.txt
+	$(GHDL) -r --workdir=work $< --vcd=$@
+
 .PRECIOUS: dec_vector_tb.vcd
 dec_vector_tb.vcd: dec_vector_tb dec_input.txt
 	$(GHDL) -r --workdir=work $< --vcd=$@
+
+.PRECIOUS: cnp_vector_tb
+cnp_vector_tb: work/work-obj93.cf
+	$(GHDL) -m --workdir=work $@
 
 .PRECIOUS: dec_vector_tb
 dec_vector_tb: work/work-obj93.cf
@@ -26,8 +38,16 @@ dec_vector_tb: work/work-obj93.cf
 work/check_table_txt: check_table_txt.cc ldpc.hh | work
 	$(CXX) $< -o $@
 
+.PRECIOUS: work/generate_cnp_input_txt
+work/generate_cnp_input_txt: generate_cnp_input_txt.cc ldpc.hh | work
+	$(CXX) $< -o $@
+
 .PRECIOUS: work/generate_dec_input_txt
 work/generate_dec_input_txt: generate_dec_input_txt.cc ldpc.hh | work
+	$(CXX) $< -o $@
+
+.PRECIOUS: work/generate_cnp_expected_txt
+work/generate_cnp_expected_txt: generate_cnp_expected_txt.cc *.hh | work
 	$(CXX) $< -o $@
 
 .PRECIOUS: work/generate_dec_expected_txt
@@ -37,6 +57,14 @@ work/generate_dec_expected_txt: generate_dec_expected_txt.cc *.hh | work
 .PRECIOUS: work/generate_table_vhd
 work/generate_table_vhd: generate_table_vhd.cc ldpc.hh | work
 	$(CXX) $< -o $@
+
+.PRECIOUS: cnp_input.txt
+cnp_input.txt: | work/generate_cnp_input_txt
+	work/generate_cnp_input_txt
+
+.PRECIOUS: cnp_expected.txt
+cnp_expected.txt: cnp_input.txt table.txt | work/generate_cnp_expected_txt
+	work/generate_cnp_expected_txt
 
 .PRECIOUS: dec_input.txt
 dec_input.txt: | work/generate_dec_input_txt

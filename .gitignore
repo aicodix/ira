@@ -3,5 +3,7 @@ work
 *_tb
 *.vcd
 *.gtkw
-dec_*.txt
+*_input.txt
+*_output.txt
+*_expected.txt
 .*.swp

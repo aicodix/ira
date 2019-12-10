@@ -21,10 +21,13 @@ Run ```make vcd``` to generate waveforms and watch them via ```gtkwave dec_vecto
 * Interface for switching or replacing code table
 * Shortening the pipeline if timing analysis allows it
 * Self-Corrected Min-Sum
+* More corner case testing and documentation
 * Can the interface be improved?
 
 ### DONE
 
+* Min-Sum or Offset-Min-Sum with fixed beta = 1
+* Pipelined processing
 * Write disable flags to resolve write conflicts with DDSMs
 * Reference decoder in C++
 * Tool for checking code table entries for data hazards
@@ -45,6 +48,10 @@ Transformed and manipulated DVB T2 B7 code table for vector length of 15:
 * Above sorting helps maximally spacing out same offsets on consecutive columns.
 * Manually swapped columns to avoid same offsets on consecutive columns.
 
+### [check_table_txt.hh](check_table_txt.hh)
+
+check table.txt for data hazards
+
 The following rules must apply to the table for the decoder to work correctly:
 
 * Rows containing DDSMs must keep locations with same offset consecutive.
@@ -54,6 +61,10 @@ The following rules must apply to the table for the decoder to work correctly:
 ### [table.vhd](table.vhd)
 
 code table generated from [table.txt](table.txt) by [generate_table_vhd.cc](generate_table_vhd.cc)
+
+### [cnp_vector_tb.vhd](cnp_vector_tb.vhd)
+
+testbench for the vector check node processor
 
 ### [dec_vector_tb.vhd](dec_vector_tb.vhd)
 
@@ -67,11 +78,17 @@ SISO vector decoder for IRA-LDPC codes
 
 vector check node processor
 
-Look in [cnp](https://github.com/aicodix/cnp) repository for testbench.
-
 ### [buf_vector.vhd](buf_vector.vhd)
 
 buffer for the vector check node processor
+
+### [generate_cnp_input_txt.cc](generate_cnp_input_txt.cc)
+
+generate [cnp_input.txt](cnp_input.txt) from random noise
+
+### [generate_cnp_expected_txt.cc](generate_cnp_expected_txt.cc)
+
+generate [cnp_expected.txt](cnp_expected.txt) processed from [cnp_input.txt](cnp_input.txt)
 
 ### [generate_dec_input_txt.cc](generate_dec_input_txt.cc)
 
@@ -150,11 +167,31 @@ It computes the following, but having only O(N) complexity and using O(1) extra 
 
 Check node processor reference code
 
+The C++ code below is also included in [cnp_reference.hh](cnp_reference.hh):
+
+```
+void cnp(int *output, const int *input, int cnt, int beta)
+{
+	int imags[cnt];
+	for (int i = 0; i < cnt; ++i)
+		imags[i] = min(max(abs(input[i]) - beta, 0), 31);
+
+	int omags[cnt];
+	CODE::exclusive_reduce(imags, omags, cnt, min);
+
+	int isgns[cnt];
+	for (int i = 0; i < cnt; ++i)
+		isgns[i] = sgn(input[i]);
+
+	int osgns[cnt];
+	CODE::exclusive_reduce(isgns, osgns, cnt, mul);
+
+	for (int i = 0; i < cnt; ++i)
+		output[i] = osgns[i] * omags[i];
+}
+```
+
 ### [dec_reference.hh](dec_reference.hh)
 
 IRA-LDPC decoder reference code
-
-### [check_table_txt.hh](check_table_txt.hh)
-
-check table.txt for data hazards
 
