@@ -3,5 +3,5 @@ work
 *_tb
 *.vcd
 *.gtkw
-soft_*.txt
+dec_*.txt
 .*.swp

@@ -1,5 +1,5 @@
 /*
-Generate soft_expected.txt decoded from soft_input.txt
+Generate dec_expected.txt decoded from dec_input.txt
 
 Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
@@ -26,8 +26,8 @@ int main()
 			table_txt >> shifts[loc];
 		}
 	}
-	std::ifstream soft_input("soft_input.txt");
-	std::ofstream soft_output("soft_expected.txt");
+	std::ifstream soft_input("dec_input.txt");
+	std::ofstream soft_output("dec_expected.txt");
 	while (soft_input.good()) {
 		int inp[CODE_SCALARS], out[CODE_SCALARS];
 		for (int j = 0; j < CODE_SCALARS; ++j)

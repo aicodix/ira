@@ -76,7 +76,7 @@ begin
 	end process;
 
 	soft_input : process (reset, clock)
-		file input : text open read_mode is "soft_input.txt";
+		file input : text open read_mode is "dec_input.txt";
 		variable buf : line;
 		variable val : soft_scalar;
 		variable pos : natural range 0 to code_scalars;
@@ -113,7 +113,7 @@ begin
 	end process;
 
 	soft_output : process (reset, clock)
-		file output : text open write_mode is "soft_output.txt";
+		file output : text open write_mode is "dec_output.txt";
 		variable buf : line;
 		variable val : soft_scalar;
 		variable pos : natural range 0 to code_scalars;
