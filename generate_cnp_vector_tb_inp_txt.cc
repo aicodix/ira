@@ -1,5 +1,5 @@
 /*
-Generate cnp_input.txt from random noise
+Generate cnp_vector_tb_inp.txt from random noise
 
 Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
@@ -7,7 +7,8 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <fstream>
 #include <functional>
 #include <random>
-#include "ldpc.hh"
+#include "ldpc_scalar.hh"
+#include "ldpc_vector.hh"
 
 int main()
 {
@@ -20,9 +21,9 @@ int main()
 	auto wd_flag = std::bind(uniform(0, 1), generator);
 	auto offset = std::bind(uniform(0, CODE_VECTORS-1), generator);
 	auto shift = std::bind(uniform(0, VECTOR_SCALARS-1), generator);
-	auto location = std::bind(uniform(0, LOCATIONS_MAX-1), generator);
+	auto location = std::bind(uniform(0, VECTOR_LOCATIONS_MAX-1), generator);
 
-	std::ofstream vector_input("cnp_input.txt");
+	std::ofstream vector_input("cnp_vector_tb_inp.txt");
 
 	for (int i = 0; i < 100; ++i) {
 		int cnt = count();

@@ -5,7 +5,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
-use work.ldpc.all;
+use work.ldpc_scalar.all;
+use work.ldpc_vector.all;
 
 entity cnp_vector_tb is
 end cnp_vector_tb;
@@ -25,12 +26,12 @@ architecture behavioral of cnp_vector_tb is
 	signal cnp_ocsft : csft_vector;
 	signal cnp_iwdf : boolean;
 	signal cnp_owdf : boolean;
-	signal cnp_iloc : location_scalar;
-	signal cnp_oloc : location_scalar;
-	signal cnp_ioff : offset_scalar;
-	signal cnp_ooff : offset_scalar;
-	signal cnp_ishi : shift_scalar;
-	signal cnp_oshi : shift_scalar;
+	signal cnp_iloc : vector_location;
+	signal cnp_oloc : vector_location;
+	signal cnp_ioff : vector_offset;
+	signal cnp_ooff : vector_offset;
+	signal cnp_ishi : vector_shift;
+	signal cnp_oshi : vector_shift;
 begin
 	cnp_inst : entity work.cnp_vector
 		port map (clock,
@@ -78,13 +79,13 @@ begin
 	end process;
 
 	soft_input : process (reset, clock)
-		file input : text open read_mode is "cnp_input.txt";
+		file input : text open read_mode is "cnp_vector_tb_inp.txt";
 		variable buf : line;
 		variable val : soft_vector;
 		variable wdf : boolean;
-		variable loc : location_scalar;
-		variable off : offset_scalar;
-		variable shi : shift_scalar;
+		variable loc : vector_location;
+		variable off : vector_offset;
+		variable shi : vector_shift;
 		variable del : character;
 		variable cnt : count_scalar;
 		variable seq : sequence_scalar;
@@ -128,13 +129,13 @@ begin
 	end process;
 
 	soft_output : process (reset, clock)
-		file output : text open write_mode is "cnp_output.txt";
+		file output : text open write_mode is "cnp_vector_tb_out.txt";
 		variable buf : line;
 		variable val : soft_vector;
 		variable wdf : boolean;
-		variable loc : location_scalar;
-		variable off : offset_scalar;
-		variable shi : shift_scalar;
+		variable loc : vector_location;
+		variable off : vector_offset;
+		variable shi : vector_shift;
 		variable seq : sequence_scalar;
 	begin
 		if reset = '0' and rising_edge(clock) and cnp_valid then

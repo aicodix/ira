@@ -4,7 +4,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.ldpc.all;
+use work.ldpc_scalar.all;
+use work.ldpc_vector.all;
 
 entity cnp_vector is
 	port (
@@ -20,12 +21,12 @@ entity cnp_vector is
 		ocsft : out csft_vector;
 		iwdf : in boolean;
 		owdf : out boolean;
-		iloc : in location_scalar;
-		oloc : out location_scalar;
-		ioff : in offset_scalar;
-		ooff : out offset_scalar;
-		ishi : in shift_scalar;
-		oshi : out shift_scalar
+		iloc : in vector_location;
+		oloc : out vector_location;
+		ioff : in vector_offset;
+		ooff : out vector_offset;
+		ishi : in vector_shift;
+		oshi : out vector_shift
 	);
 end cnp_vector;
 
@@ -55,12 +56,12 @@ architecture rtl of cnp_vector is
 	signal buf_ocmag : cmag_vector;
 	signal buf_iwdf : boolean;
 	signal buf_owdf : boolean;
-	signal buf_iloc : location_scalar;
-	signal buf_oloc : location_scalar;
-	signal buf_ioff : offset_scalar;
-	signal buf_ooff : offset_scalar;
-	signal buf_ishi : shift_scalar;
-	signal buf_oshi : shift_scalar;
+	signal buf_iloc : vector_location;
+	signal buf_oloc : vector_location;
+	signal buf_ioff : vector_offset;
+	signal buf_ooff : vector_offset;
+	signal buf_ishi : vector_shift;
+	signal buf_oshi : vector_shift;
 
 	function oms (val : vmag_scalar) return cmag_scalar is
 		constant beta : integer := 1;

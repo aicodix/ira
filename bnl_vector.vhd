@@ -4,7 +4,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.ldpc.all;
+use work.ldpc_vector.all;
 
 entity bnl_vector is
 	generic (

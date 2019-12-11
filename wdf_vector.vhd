@@ -4,22 +4,22 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.ldpc.all;
+use work.ldpc_vector.all;
 
 entity wdf_vector is
 	port (
 		clock : in std_logic;
 		wren : in boolean;
 		rden : in boolean;
-		wpos : in location_scalar;
-		rpos : in location_scalar;
+		wpos : in vector_location;
+		rpos : in vector_location;
 		iwdf : in boolean;
 		owdf : out boolean
 	);
 end wdf_vector;
 
 architecture rtl of wdf_vector is
-	type wd_flags is array (0 to locations_max-1) of boolean;
+	type wd_flags is array (0 to vector_locations_max-1) of boolean;
 	signal wdfs : wd_flags;
 begin
 	process (clock)

@@ -59,8 +59,8 @@ void dec(int *output, const int *input)
 		for (int j = 0; j < BLOCK_VECTORS; ++j)
 			for (int n = 0; n < VECTOR_SCALARS; ++n)
 				vars[messages+BLOCK_VECTORS*i+j][n] = min(max(input[K+q*(BLOCK_VECTORS*n+j)+i], -VMAG_MAX), VMAG_MAX);
-	int wd_flags[LOCATIONS_MAX];
-	int bnls[LOCATIONS_MAX][VECTOR_SCALARS];
+	int wd_flags[VECTOR_LOCATIONS_MAX];
+	int bnls[VECTOR_LOCATIONS_MAX][VECTOR_SCALARS];
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
 		int loc = 0;
 		for (int pty = 0; pty < parities; ++pty) {

@@ -4,8 +4,9 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.ldpc.all;
-use work.table.all;
+use work.ldpc_scalar.all;
+use work.ldpc_vector.all;
+use work.table_vector.all;
 
 entity dec_vector is
 	port (
@@ -30,18 +31,18 @@ architecture rtl of dec_vector is
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
 	signal var_isft, var_osft : vsft_vector;
 	signal bnl_wren, bnl_rden : boolean := false;
-	signal bnl_wpos, bnl_rpos : location_scalar;
+	signal bnl_wpos, bnl_rpos : vector_location;
 	signal bnl_isft, bnl_osft : csft_vector;
 	signal first_wdf : boolean;
 	signal wdf_wren, wdf_rden : boolean := false;
-	signal wdf_wpos, wdf_rpos : location_scalar;
+	signal wdf_wpos, wdf_rpos : vector_location;
 	signal wdf_iwdf, wdf_owdf : boolean;
 	signal loc_wren, loc_rden : boolean := false;
-	signal loc_wpos, loc_rpos : location_scalar;
-	signal loc_ioff, loc_ooff : offset_scalar;
-	signal loc_ishi, loc_oshi : shift_scalar;
+	signal loc_wpos, loc_rpos : vector_location;
+	signal loc_ioff, loc_ooff : vector_offset;
+	signal loc_ishi, loc_oshi : vector_shift;
 	signal cnt_wren : boolean := false;
-	signal cnt_wpos, cnt_rpos : natural range 0 to parities_max-1;
+	signal cnt_wpos, cnt_rpos : natural range 0 to vector_parities_max-1;
 	signal cnt_icnt, cnt_ocnt : count_scalar;
 	signal cnp_start : boolean := false;
 	signal cnp_count : count_scalar;
@@ -50,9 +51,9 @@ architecture rtl of dec_vector is
 	signal cnp_ivsft, cnp_ovsft : vsft_vector;
 	signal cnp_ocsft : csft_vector;
 	signal cnp_iwdf, cnp_owdf : boolean;
-	signal cnp_iloc, cnp_oloc : location_scalar;
-	signal cnp_ioff, cnp_ooff : offset_scalar;
-	signal cnp_ishi, cnp_oshi : shift_scalar;
+	signal cnp_iloc, cnp_oloc : vector_location;
+	signal cnp_ioff, cnp_ooff : vector_offset;
+	signal cnp_ishi, cnp_oshi : vector_shift;
 	signal rol_shift : natural range 0 to soft_vector'length-1;
 	signal rol_ivsft, rol_ovsft : vsft_vector;
 	signal ror_clken : boolean;
@@ -63,9 +64,9 @@ architecture rtl of dec_vector is
 	signal sub_icsft, inv_sub_icsft : csft_vector;
 	signal add_ivsft, add_ovsft : vsft_vector;
 	signal add_icsft : csft_vector;
-	signal ptys : parities := init_parities;
-	signal msgs : messages := CODE_VECTORS - init_parities;
-	signal inp_pty : natural range 0 to parities_max;
+	signal ptys : vector_parities := init_vector_parities;
+	signal msgs : vector_messages := CODE_VECTORS - init_vector_parities;
+	signal inp_pty : natural range 0 to vector_parities_max;
 	signal prev_start : boolean := false;
 	type swap_start_delays is array (1 to 2) of boolean;
 	signal swap_start_d : swap_start_delays := (others => false);
@@ -80,12 +81,12 @@ architecture rtl of dec_vector is
 	subtype num_scalar is natural range 0 to degree_max;
 	signal inp_num : num_scalar := 0;
 	signal inp_cnt : count_scalar := degree_max;
-	signal inp_loc : location_scalar;
+	signal inp_loc : vector_location;
 	type out_stages is array (1 to 5) of boolean;
 	signal out_stage : out_stages := (others => false);
-	type out_off_delays is array (1 to 4) of offset_scalar;
+	type out_off_delays is array (1 to 4) of vector_offset;
 	signal out_off_d : out_off_delays;
-	type out_shi_delays is array (1 to 2) of shift_scalar;
+	type out_shi_delays is array (1 to 2) of vector_shift;
 	signal out_shi_d : out_shi_delays;
 	type out_wdf_delays is array (1 to 4) of boolean;
 	signal out_wdf_d : out_wdf_delays;
@@ -95,13 +96,13 @@ architecture rtl of dec_vector is
 	signal inp_cnt_d : inp_cnt_delays;
 	type inp_seq_delays is array (1 to 8) of sequence_scalar;
 	signal inp_seq_d : inp_seq_delays;
-	type inp_loc_delays is array (1 to 8) of location_scalar;
+	type inp_loc_delays is array (1 to 8) of vector_location;
 	signal inp_loc_d : inp_loc_delays;
 	type inp_wdf_delays is array (1 to 6) of boolean;
 	signal inp_wdf_d : inp_wdf_delays;
-	type inp_off_delays is array (1 to 6) of offset_scalar;
+	type inp_off_delays is array (1 to 6) of vector_offset;
 	signal inp_off_d : inp_off_delays;
-	type inp_shi_delays is array (1 to 6) of shift_scalar;
+	type inp_shi_delays is array (1 to 6) of vector_shift;
 	signal inp_shi_d : inp_shi_delays;
 
 	function inv (val : csft_vector) return csft_vector is
@@ -143,7 +144,7 @@ begin
 
 	bnl_rden <= not cnp_busy;
 	bnl_inst : entity work.bnl_vector
-		generic map (locations_max)
+		generic map (vector_locations_max)
 		port map (clock,
 			bnl_wren, bnl_rden,
 			bnl_wpos, bnl_rpos,
@@ -288,13 +289,13 @@ begin
 						if inp_pty = 0 then
 							inp_loc <= 0;
 						end if;
-					elsif inp_loc+1 /= locations_max-1 then
+					elsif inp_loc+1 /= vector_locations_max-1 then
 						inp_loc <= inp_loc + 1;
 					end if;
 					if inp_num = 0 then
 						if inp_pty+1 = ptys then
 							cnt_rpos <= 0;
-						elsif cnt_rpos+1 /= parities_max-1 then
+						elsif cnt_rpos+1 /= vector_parities_max-1 then
 							cnt_rpos <= cnt_rpos + 1;
 						end if;
 					end if;

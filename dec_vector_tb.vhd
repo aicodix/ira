@@ -5,7 +5,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
-use work.ldpc.all;
+use work.ldpc_scalar.all;
+use work.ldpc_vector.all;
 
 entity dec_vector_tb is
 end dec_vector_tb;
@@ -76,7 +77,7 @@ begin
 	end process;
 
 	soft_input : process (reset, clock)
-		file input : text open read_mode is "dec_input.txt";
+		file input : text open read_mode is "dec_vector_tb_inp.txt";
 		variable buf : line;
 		variable val : soft_scalar;
 		variable pos : natural range 0 to code_scalars;
@@ -113,7 +114,7 @@ begin
 	end process;
 
 	soft_output : process (reset, clock)
-		file output : text open write_mode is "dec_output.txt";
+		file output : text open write_mode is "dec_vector_tb_out.txt";
 		variable buf : line;
 		variable val : soft_scalar;
 		variable pos : natural range 0 to code_scalars;

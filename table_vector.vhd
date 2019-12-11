@@ -1,23 +1,24 @@
--- code table generated from table.txt by generate_table_vhd.cc
+-- code table generated from table_vector.txt by generate_table_vector_vhd.cc
 --
 -- Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
-use work.ldpc.all;
+use work.ldpc_scalar.all;
+use work.ldpc_vector.all;
 
-package table is
-	function init_parities return parities;
-	function init_counts return counts;
-	function init_offsets return offsets;
-	function init_shifts return shifts;
+package table_vector is
+	function init_vector_parities return vector_parities;
+	function init_vector_counts return vector_counts;
+	function init_vector_offsets return vector_offsets;
+	function init_vector_shifts return vector_shifts;
 end package;
 
-package body table is
-	function init_parities return parities is
+package body table_vector is
+	function init_vector_parities return vector_parities is
 	begin
 		return 192;
 	end function;
 
-	function init_counts return counts is
+	function init_vector_counts return vector_counts is
 	begin
 		return (
 16,
@@ -215,7 +216,7 @@ package body table is
 		others => count_scalar'low);
 	end function;
 
-	function init_offsets return offsets is
+	function init_vector_offsets return vector_offsets is
 	begin
 		return (
 6,64,121,121,203,313,365,367,505,521,647,697,830,868,889,1056,
@@ -413,7 +414,7 @@ package body table is
 		others => 0);
 	end function;
 
-	function init_shifts return shifts is
+	function init_vector_shifts return vector_shifts is
 	begin
 		return (
 12,7,0,11,7,0,9,6,0,2,13,0,13,9,0,0,

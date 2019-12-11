@@ -1,20 +1,21 @@
 /*
-check table.txt for data hazards
+check table_vector.txt for data hazards
 
 Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
 
 #include <fstream>
 #include <iostream>
-#include "ldpc.hh"
+#include "ldpc_scalar.hh"
+#include "ldpc_vector.hh"
 
 int main()
 {
-	int offsets[PARITIES_MAX][COUNT_MAX];
-	int shifts[PARITIES_MAX][COUNT_MAX];
-	int counts[PARITIES_MAX];
+	int offsets[VECTOR_PARITIES_MAX][COUNT_MAX];
+	int shifts[VECTOR_PARITIES_MAX][COUNT_MAX];
+	int counts[VECTOR_PARITIES_MAX];
 	int parities = 0;
-	std::ifstream table_txt("table.txt");
+	std::ifstream table_txt("table_vector.txt");
 	for (; table_txt >> counts[parities]; ++parities) {
 		for (int num = 0; num < counts[parities]; ++num) {
 			table_txt >> offsets[parities][num];

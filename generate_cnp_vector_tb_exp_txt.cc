@@ -1,5 +1,5 @@
 /*
-Generate dec_expected.txt processed from dec_input.txt
+Generate dec_vector_tb_exp.txt processed from dec_vector_tb_inp.txt
 
 Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
@@ -7,13 +7,14 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <fstream>
 #include <functional>
 #include <random>
-#include "ldpc.hh"
+#include "ldpc_scalar.hh"
+#include "ldpc_vector.hh"
 #include "cnp_reference.hh"
 
 int main()
 {
-	std::ifstream vector_input("cnp_input.txt");
-	std::ofstream vector_output("cnp_expected.txt");
+	std::ifstream vector_input("cnp_vector_tb_inp.txt");
+	std::ofstream vector_output("cnp_vector_tb_exp.txt");
 
 	for (int cnt; vector_input >> cnt;) {
 		int seq;

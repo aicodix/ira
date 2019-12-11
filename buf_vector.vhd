@@ -4,7 +4,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.ldpc.all;
+use work.ldpc_scalar.all;
+use work.ldpc_vector.all;
 
 entity buf_vector is
 	port (
@@ -17,23 +18,23 @@ entity buf_vector is
 		ocmag : out cmag_vector;
 		iwdf : in boolean;
 		owdf : out boolean;
-		iloc : in location_scalar;
-		oloc : out location_scalar;
-		ioff : in offset_scalar;
-		ooff : out offset_scalar;
-		ishi : in shift_scalar;
-		oshi : out shift_scalar
+		iloc : in vector_location;
+		oloc : out vector_location;
+		ioff : in vector_offset;
+		ooff : out vector_offset;
+		ishi : in vector_shift;
+		oshi : out vector_shift
 	);
 end buf_vector;
 
 architecture rtl of buf_vector is
 	type wdfs_array is array (0 to degree_max-1) of boolean;
 	signal wdfs : wdfs_array;
-	type locs_array is array (0 to degree_max-1) of location_scalar;
+	type locs_array is array (0 to degree_max-1) of vector_location;
 	signal locs : locs_array;
-	type offs_array is array (0 to degree_max-1) of offset_scalar;
+	type offs_array is array (0 to degree_max-1) of vector_offset;
 	signal offs : offs_array;
-	type shis_array is array (0 to degree_max-1) of shift_scalar;
+	type shis_array is array (0 to degree_max-1) of vector_shift;
 	signal shis : shis_array;
 begin
 	vector_inst : for idx in soft_vector'range generate
