@@ -26,9 +26,6 @@ entity cnp_scalar is
 end cnp_scalar;
 
 architecture rtl of cnp_scalar is
-	type two_min_scalar is record
-		lo, hi : cmag_scalar;
-	end record;
 	signal imin, dmin, omin : two_min_scalar;
 	signal ipty, dpty, opty : boolean;
 	subtype num_scalar is natural range 0 to degree_max;
@@ -52,41 +49,6 @@ architecture rtl of cnp_scalar is
 	signal buf_oloc : scalar_location;
 	signal buf_ioff : scalar_offset;
 	signal buf_ooff : scalar_offset;
-
-	function oms (val : vmag_scalar) return cmag_scalar is
-		constant beta : integer := 1;
-		constant max : integer := cmag_scalar'high + beta;
-	begin
-		if val > max then
-			return cmag_scalar'high;
-		elsif val < beta then
-			return 0;
-		else
-			return val - beta;
-		end if;
-	end function;
-
-	function other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar is
-		variable tmp : cmag_scalar;
-	begin
-		if mag = min.lo then
-			return min.hi;
-		else
-			return min.lo;
-		end if;
-	end function;
-
-	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar is
-		variable tmp : two_min_scalar;
-	begin
-		if mag < min.lo then
-			return (mag, min.lo);
-		elsif mag < min.hi then
-			return (min.lo, mag);
-		else
-			return min;
-		end if;
-	end function;
 begin
 	buf_inst : entity work.buf_scalar
 		port map (clock,
@@ -96,9 +58,9 @@ begin
 			buf_iloc, buf_oloc,
 			buf_ioff, buf_ooff);
 
-	icmag <= oms(ivsft.mag);
+	icmag <= min_sum(ivsft.mag);
 	ovsft <= buf_ovsft;
-	ocsft <= (opty xor buf_ovsft.sgn, other(buf_ocmag, omin));
+	ocsft <= (opty xor buf_ovsft.sgn, select_other(buf_ocmag, omin));
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;
 	finalize <= false when not this_start else num = prev_count when shorter else num = this_count;

@@ -27,12 +27,16 @@ package ldpc_vector is
 	type vmag_vector is array (0 to vector_scalars-1) of vmag_scalar;
 	type vsft_vector is array (0 to vector_scalars-1) of vsft_scalar;
 	type csft_vector is array (0 to vector_scalars-1) of csft_scalar;
+	type two_min_vector is array (0 to vector_scalars-1) of two_min_scalar;
 	function soft_to_vsft (val : soft_vector) return vsft_vector;
 	function csft_to_soft (val : csft_vector) return soft_vector;
 	function vsft_to_soft (val : vsft_vector) return soft_vector;
 	function sign_of_vsft (val : vsft_vector) return sign_vector;
 	function vmag_of_vsft (val : vsft_vector) return vmag_vector;
 	function sign_and_cmag_to_csft (sgn : sign_vector; mag : cmag_vector) return csft_vector;
+	function min_sum (val : vmag_vector) return cmag_vector;
+	function select_other (mag : cmag_vector; min : two_min_vector) return cmag_vector;
+	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector;
 end package;
 
 package body ldpc_vector is
@@ -86,6 +90,33 @@ package body ldpc_vector is
 	begin
 		for idx in tmp'range loop
 			tmp(idx) := (sgn(idx), mag(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function min_sum (val : vmag_vector) return cmag_vector is
+		variable tmp : cmag_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := min_sum(val(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function select_other (mag : cmag_vector; min : two_min_vector) return cmag_vector is
+		variable tmp : cmag_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := select_other(mag(idx), min(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector is
+		variable tmp : two_min_vector;
+	begin
+		for idx in cmag_vector'range loop
+			tmp(idx) := two_min(mag(idx), min(idx));
 		end loop;
 		return tmp;
 	end function;

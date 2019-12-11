@@ -31,10 +31,6 @@ entity cnp_vector is
 end cnp_vector;
 
 architecture rtl of cnp_vector is
-	type two_min_scalar is record
-		lo, hi : cmag_scalar;
-	end record;
-	type two_min_vector is array (0 to vector_scalars-1) of two_min_scalar;
 	signal imin, dmin, omin : two_min_vector;
 	signal ipty, dpty, opty : sign_vector;
 	subtype num_scalar is natural range 0 to degree_max;
@@ -62,68 +58,6 @@ architecture rtl of cnp_vector is
 	signal buf_ooff : vector_offset;
 	signal buf_ishi : vector_shift;
 	signal buf_oshi : vector_shift;
-
-	function oms (val : vmag_scalar) return cmag_scalar is
-		constant beta : integer := 1;
-		constant max : integer := cmag_scalar'high + beta;
-	begin
-		if val > max then
-			return cmag_scalar'high;
-		elsif val < beta then
-			return 0;
-		else
-			return val - beta;
-		end if;
-	end function;
-
-	function oms (val : vmag_vector) return cmag_vector is
-		variable tmp : cmag_vector;
-	begin
-		for idx in tmp'range loop
-			tmp(idx) := oms(val(idx));
-		end loop;
-		return tmp;
-	end function;
-
-	function other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar is
-		variable tmp : cmag_scalar;
-	begin
-		if mag = min.lo then
-			return min.hi;
-		else
-			return min.lo;
-		end if;
-	end function;
-
-	function other (mag : cmag_vector; min : two_min_vector) return cmag_vector is
-		variable tmp : cmag_vector;
-	begin
-		for idx in tmp'range loop
-			tmp(idx) := other(mag(idx), min(idx));
-		end loop;
-		return tmp;
-	end function;
-
-	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar is
-		variable tmp : two_min_scalar;
-	begin
-		if mag < min.lo then
-			return (mag, min.lo);
-		elsif mag < min.hi then
-			return (min.lo, mag);
-		else
-			return min;
-		end if;
-	end function;
-
-	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector is
-		variable tmp : two_min_vector;
-	begin
-		for idx in cmag_vector'range loop
-			tmp(idx) := two_min(mag(idx), min(idx));
-		end loop;
-		return tmp;
-	end function;
 begin
 	buf_inst : entity work.buf_vector
 		port map (clock,
@@ -135,9 +69,9 @@ begin
 			buf_ioff, buf_ooff,
 			buf_ishi, buf_oshi);
 
-	icmag <= oms(vmag_of_vsft(ivsft));
+	icmag <= min_sum(vmag_of_vsft(ivsft));
 	ovsft <= buf_ovsft;
-	ocsft <= sign_and_cmag_to_csft(opty xor sign_of_vsft(buf_ovsft), other(buf_ocmag, omin));
+	ocsft <= sign_and_cmag_to_csft(opty xor sign_of_vsft(buf_ovsft), select_other(buf_ocmag, omin));
 	owdf <= buf_owdf;
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;

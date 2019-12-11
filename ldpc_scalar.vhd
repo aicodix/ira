@@ -33,9 +33,15 @@ package ldpc_scalar is
 		sgn : boolean;
 		mag : cmag_scalar;
 	end record;
+	type two_min_scalar is record
+		lo, hi : cmag_scalar;
+	end record;
 	function soft_to_vsft (val : soft_scalar) return vsft_scalar;
 	function csft_to_soft (val : csft_scalar) return soft_scalar;
 	function vsft_to_soft (val : vsft_scalar) return soft_scalar;
+	function min_sum (val : vmag_scalar) return cmag_scalar;
+	function select_other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar;
+	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar;
 end package;
 
 package body ldpc_scalar is
@@ -66,6 +72,41 @@ package body ldpc_scalar is
 			return -val.mag;
 		else
 			return val.mag;
+		end if;
+	end function;
+
+	function min_sum (val : vmag_scalar) return cmag_scalar is
+		constant beta : integer := 1;
+		constant max : integer := cmag_scalar'high + beta;
+	begin
+		if val > max then
+			return cmag_scalar'high;
+		elsif val < beta then
+			return 0;
+		else
+			return val - beta;
+		end if;
+	end function;
+
+	function select_other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar is
+		variable tmp : cmag_scalar;
+	begin
+		if mag = min.lo then
+			return min.hi;
+		else
+			return min.lo;
+		end if;
+	end function;
+
+	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar is
+		variable tmp : two_min_scalar;
+	begin
+		if mag < min.lo then
+			return (mag, min.lo);
+		elsif mag < min.hi then
+			return (min.lo, mag);
+		else
+			return min;
 		end if;
 	end function;
 end package body;
