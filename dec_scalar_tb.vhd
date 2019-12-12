@@ -1,4 +1,4 @@
--- testbench for the vector decoder
+-- testbench for the scalar decoder
 --
 -- Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
@@ -7,10 +7,10 @@ use ieee.std_logic_1164.all;
 use std.textio.all;
 use work.ldpc_scalar.all;
 
-entity dec_vector_tb is
-end dec_vector_tb;
+entity dec_scalar_tb is
+end dec_scalar_tb;
 
-architecture behavioral of dec_vector_tb is
+architecture behavioral of dec_scalar_tb is
 	signal clock : std_logic := '0';
 	signal reset : std_logic := '1';
 	signal done : boolean := false;
@@ -20,7 +20,7 @@ architecture behavioral of dec_vector_tb is
 	signal dec_isoft : soft_scalar := 0;
 	signal dec_osoft : soft_scalar;
 begin
-	dec_inst : entity work.dec_vector
+	dec_inst : entity work.dec_scalar
 		port map (clock, dec_busy,
 			dec_istart, dec_ostart,
 			dec_isoft, dec_osoft);
@@ -76,7 +76,7 @@ begin
 	end process;
 
 	soft_input : process (reset, clock)
-		file input : text open read_mode is "dec_vector_tb_inp.txt";
+		file input : text open read_mode is "dec_scalar_tb_inp.txt";
 		variable buf : line;
 		variable val : soft_scalar;
 		variable pos : natural range 0 to code_scalars;
@@ -113,7 +113,7 @@ begin
 	end process;
 
 	soft_output : process (reset, clock)
-		file output : text open write_mode is "dec_vector_tb_out.txt";
+		file output : text open write_mode is "dec_scalar_tb_out.txt";
 		variable buf : line;
 		variable val : soft_scalar;
 		variable pos : natural range 0 to code_scalars;
