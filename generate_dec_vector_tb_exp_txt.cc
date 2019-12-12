@@ -7,7 +7,6 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <fstream>
 #include <functional>
 #include <random>
-#include "ldpc_scalar.hh"
 #include "ldpc_vector.hh"
 
 int offsets[VECTOR_LOCATIONS_MAX];
@@ -15,7 +14,7 @@ int shifts[VECTOR_LOCATIONS_MAX];
 int counts[VECTOR_PARITIES_MAX];
 int parities = 0;
 
-#include "dec_reference.hh"
+#include "dec_vector.hh"
 
 int main()
 {
@@ -34,7 +33,7 @@ int main()
 		for (int j = 0; j < CODE_SCALARS; ++j)
 			if (!(soft_input >> inp[j]))
 				return 0;
-		dec(out, inp);
+		dec_vector(out, inp);
 		for (int j = 0; j < CODE_SCALARS; ++j)
 			soft_output << '\t' << out[j];
 		soft_output << std::endl;

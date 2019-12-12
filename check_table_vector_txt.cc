@@ -6,7 +6,6 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
 #include <fstream>
 #include <iostream>
-#include "ldpc_scalar.hh"
 #include "ldpc_vector.hh"
 
 int main()

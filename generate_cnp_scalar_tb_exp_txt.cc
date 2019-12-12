@@ -8,7 +8,7 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <functional>
 #include <random>
 #include "ldpc_scalar.hh"
-#include "cnp_reference.hh"
+#include "cnp_scalar.hh"
 
 int main()
 {
@@ -27,7 +27,7 @@ int main()
 			scalar_input >> inp[j];
 		}
 		int out[COUNT_MAX];
-		cnp(out, inp, cnt, 1);
+		cnp_scalar(out, inp, cnt, 1);
 		scalar_output << seq;
 		for (int j = 0; j < cnt; ++j) {
 			scalar_output << '\t' << loc[j];

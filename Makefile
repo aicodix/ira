@@ -72,9 +72,9 @@ work/check_table_vector_txt: check_table_vector_txt.cc ldpc_scalar.hh ldpc_vecto
 work/generate_cnp_scalar_tb_inp_txt: generate_cnp_scalar_tb_inp_txt.cc ldpc_scalar.hh
 work/generate_cnp_vector_tb_inp_txt: generate_cnp_vector_tb_inp_txt.cc ldpc_scalar.hh ldpc_vector.hh
 work/generate_dec_vector_tb_inp_txt: generate_dec_vector_tb_inp_txt.cc ldpc_scalar.hh ldpc_vector.hh
-work/generate_cnp_scalar_tb_exp_txt: generate_cnp_scalar_tb_exp_txt.cc ldpc_scalar.hh cnp_reference.hh exclusive_reduce.hh
-work/generate_cnp_vector_tb_exp_txt: generate_cnp_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh cnp_reference.hh exclusive_reduce.hh
-work/generate_dec_vector_tb_exp_txt: generate_dec_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh dec_reference.hh cnp_reference.hh exclusive_reduce.hh
+work/generate_cnp_scalar_tb_exp_txt: generate_cnp_scalar_tb_exp_txt.cc ldpc_scalar.hh cnp_scalar.hh exclusive_reduce.hh
+work/generate_cnp_vector_tb_exp_txt: generate_cnp_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh cnp_scalar.hh cnp_vector.hh exclusive_reduce.hh
+work/generate_dec_vector_tb_exp_txt: generate_dec_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh dec_vector.hh cnp_scalar.hh cnp_vector.hh exclusive_reduce.hh
 work/generate_table_vector_vhd: generate_table_vector_vhd.cc ldpc_scalar.hh ldpc_vector.hh
 
 work/%: %.cc | work

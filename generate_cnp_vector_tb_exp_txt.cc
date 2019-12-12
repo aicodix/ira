@@ -7,9 +7,8 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <fstream>
 #include <functional>
 #include <random>
-#include "ldpc_scalar.hh"
 #include "ldpc_vector.hh"
-#include "cnp_reference.hh"
+#include "cnp_vector.hh"
 
 int main()
 {
@@ -19,7 +18,7 @@ int main()
 	for (int cnt; vector_input >> cnt;) {
 		int seq;
 		vector_input >> seq;
-		int inp[COUNT_MAX*VECTOR_SCALARS];
+		int inp[COUNT_MAX][VECTOR_SCALARS];
 		int wdf[COUNT_MAX], loc[COUNT_MAX];
 		int off[COUNT_MAX], shi[COUNT_MAX];
 		for (int j = 0; j < cnt; ++j) {
@@ -32,18 +31,17 @@ int main()
 			vector_input.ignore(1, ':');
 			vector_input >> shi[j];
 			for (int k = 0; k < VECTOR_SCALARS; ++k)
-				vector_input >> inp[COUNT_MAX*k+j];
+				vector_input >> inp[j][k];
 		}
-		int out[COUNT_MAX*VECTOR_SCALARS];
-		for (int k = 0; k < VECTOR_SCALARS; ++k)
-			cnp(out+COUNT_MAX*k, inp+COUNT_MAX*k, cnt, 1);
+		int out[COUNT_MAX][VECTOR_SCALARS];
+		cnp_vector(out, inp, cnt, 1);
 		for (int j = 0; j < cnt; ++j) {
 			vector_output << seq << '\t';
 			vector_output << (wdf[j] ? "TRUE" : "FALSE") << '\t';
 			vector_output << loc[j] << '\t';
 			vector_output << off[j] << ':' << shi[j];
 			for (int k = 0; k < VECTOR_SCALARS; ++k)
-				vector_output << '\t' << out[COUNT_MAX*k+j];
+				vector_output << '\t' << out[j][k];
 			vector_output << std::endl;
 		}
 	}

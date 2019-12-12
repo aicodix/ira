@@ -195,11 +195,11 @@ It computes the following, but having only O(N) complexity and using O(1) extra 
 				output[i] = op(output[i], input[j]);
 ```
 
-### [cnp_reference.hh](cnp_reference.hh)
+### [cnp_scalar.hh](cnp_scalar.hh)
 
-Check node processor reference code
+scalar check node processor reference code
 
-The C++ code below is also included in [cnp_reference.hh](cnp_reference.hh):
+The C++ code below is also included in [cnp_scalar.hh](cnp_scalar.hh):
 
 ```
 void cnp(int *output, const int *input, int cnt, int beta)
@@ -223,7 +223,11 @@ void cnp(int *output, const int *input, int cnt, int beta)
 }
 ```
 
-### [dec_reference.hh](dec_reference.hh)
+### [cnp_vector.hh](cnp_vector.hh)
 
-IRA-LDPC decoder reference code
+vector check node processor reference code
+
+### [dec_vector.hh](dec_vector.hh)
+
+vector IRA-LDPC decoder reference code
 
