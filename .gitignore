@@ -6,4 +6,6 @@ work
 *_tb_inp.txt
 *_tb_out.txt
 *_tb_exp.txt
+table_model.txt
+table_solution.txt
 .*.swp

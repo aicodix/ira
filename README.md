@@ -16,7 +16,7 @@ Compare resulting ```cnp_vector_tb_out.txt``` with ```cnp_vector_tb_exp.txt``` f
 
 Compare resulting ```dec_vector_tb_out.txt``` with ```dec_vector_tb_exp.txt``` for the decoder.
 
-### Scalar versions for studying:
+### Scalar versions for studying
 
 Run ```make scalar``` to build and simulate scalar versions of the check node processor and decoder.
 
@@ -26,11 +26,23 @@ Compare resulting ```dec_scalar_tb_out.txt``` with ```dec_scalar_tb_exp.txt``` f
 
 Run ```make vcd``` to generate scalar version waveforms and watch them via ```gtkwave cnp_scalar_tb.vcd```.
 
+### Adding new vector code tables
+
+Prerequisites:
+
+* [lp_solve](http://lpsolve.sourceforge.net/5.5/) to solve linear programming problems.
+* C++ compiler to build the model and table generators.
+
+Store new table in ```table_vector.txt``` while making sure that the constants in ```ldpc_scalar.vhd```, ```ldpc_vector.vhd```, ```ldpc_scalar.hh``` and ```ldpc_vector.hh``` match.
+
+Run ```make vector``` to see if the new table is already free from data hazards by comparing ```cnp_vector_tb_out.txt``` with ```cnp_vector_tb_exp.txt```.
+
+If not, copy the new table to ```table_input.txt``` and run ```make table``` to generate ```table_vector.txt``` from ```table_input.txt``` using the ```table_solution.txt``` computed from ```table_model.txt```.
+
 ### TODO
 
 * Reduce table size for scalar decoder by factor of 360
 * Tool for generating code table entries
-* Tool for enforcing below rules for code table entries
 * Interface for switching or replacing code table
 * Shortening the pipeline if timing analysis allows it
 * Self-Corrected Min-Sum
@@ -45,6 +57,7 @@ Run ```make vcd``` to generate scalar version waveforms and watch them via ```gt
 * Write disable flags to resolve write conflicts with DDSMs
 * Reference decoder in C++
 * Tool for checking code table entries for data hazards
+* Tool for enforcing below rules for code table entries
 
 ### [ldpc_scalar.vhd](ldpc_scalar.vhd)
 
@@ -67,6 +80,14 @@ vector LDPC decoder configuration
 Transformed DVB T2 B7 code table for scalar decoder:
 
 * Rows are sorted by location offsets to maximally space out same offsets on consecutive columns.
+* Columns are not sorted by count.
+
+### [table_input.txt](table_input.txt)
+
+Transformed DVB T2 B7 code table for vector length of 15:
+
+* Rows are sorted by location offsets to maximally space out same offsets on consecutive columns.
+* Columns are not sorted by count.
 
 ### [table_vector.txt](table_vector.txt)
 
@@ -74,7 +95,8 @@ Transformed and manipulated DVB T2 B7 code table for vector length of 15:
 
 * Rows are sorted by location offsets to keep same offsets consecutive.
 * Above sorting helps maximally spacing out same offsets on consecutive columns.
-* Manually swapped columns to avoid same offsets on consecutive columns.
+* Swapped columns to avoid same offsets on consecutive columns.
+* Columns are not sorted by count.
 
 ### [check_table_scalar_txt.hh](check_table_scalar_txt.hh)
 
@@ -166,6 +188,18 @@ Generate [dec_vector_tb_exp.txt](dec_vector_tb_exp.txt) decoded from [dec_vector
 ### [generate_table_vector_vhd.cc](generate_table_vector_vhd.cc)
 
 Generate [table_vector.vhd](table_vector.vhd) from [table_vector.txt](table_vector.txt)
+
+### [generate_table_model_txt.cc](generate_table_model_txt.cc)
+
+Generate ```table_model.txt``` from ```table_input.txt```
+
+This formulates a linear programming model of the code table to solve potential data hazards.
+
+### [generate_table_vector_txt.cc](generate_table_vector_txt.cc)
+
+Generate ```table_vector.txt``` from ```table_input.txt``` and ```table_solution.txt```
+
+The solution ```table_solution.txt``` of the problem formulated in ```table_model.txt``` is used to permutate the lines in ```table_input.txt``` to create a data hazard free ```table_vector.txt```.
 
 ### [add_scalar.vhd](add_scalar.vhd)
 

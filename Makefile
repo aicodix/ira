@@ -1,5 +1,6 @@
 
 GHDL = ghdl
+LP_SOLVE = lp_solve
 
 .PHONY: vector
 vector: cnp_vector_tb_exp.txt dec_vector_tb_exp.txt cnp_vector_tb_out.txt dec_vector_tb_out.txt
@@ -12,6 +13,12 @@ all: scalar vector
 
 .PHONY: vcd
 vcd: cnp_scalar_tb.vcd dec_scalar_tb.vcd
+
+.PHONY: table
+table: table_input.txt work/generate_table_model_txt work/generate_table_vector_txt
+	work/generate_table_model_txt
+	$(LP_SOLVE) table_model.txt > table_solution.txt
+	work/generate_table_vector_txt
 
 .PRECIOUS: cnp_scalar_tb_out.txt
 cnp_scalar_tb_out.txt: cnp_scalar_tb cnp_scalar_tb_inp.txt
@@ -94,6 +101,8 @@ work/generate_dec_scalar_tb_exp_txt: generate_dec_scalar_tb_exp_txt.cc ldpc_scal
 work/generate_dec_vector_tb_exp_txt: generate_dec_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh dec_vector.hh cnp_scalar.hh cnp_vector.hh exclusive_reduce.hh
 work/generate_table_scalar_vhd: generate_table_scalar_vhd.cc ldpc_scalar.hh
 work/generate_table_vector_vhd: generate_table_vector_vhd.cc ldpc_scalar.hh ldpc_vector.hh
+work/generate_table_model_txt: generate_table_model_txt.cc ldpc_scalar.hh ldpc_vector.hh
+work/generate_table_vector_txt: generate_table_vector_txt.cc ldpc_scalar.hh ldpc_vector.hh
 
 work/%: %.cc | work
 	$(CXX) $< -o $@
@@ -135,5 +144,5 @@ work:
 
 .PHONY: clean
 clean:
-	rm -rf work *.o *_tb *_tb_inp.txt *_tb_out.txt *_tb_exp.txt *.vcd
+	rm -rf work *.o *_tb *_tb_inp.txt *_tb_out.txt *_tb_exp.txt *.vcd table_model.txt table_solution.txt
 
