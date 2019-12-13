@@ -27,16 +27,24 @@ int main()
 		lines[line] = -1;
 	std::ifstream table_solution("table_solution.txt");
 	std::string buf;
-	while (getline(table_solution, buf)) {
-		if (buf[0] != 'P')
-			continue;
-		std::string subP = buf.substr(1);
+	while (getline(table_solution, buf) && buf.find("Column name") == std::string::npos);
+	if (!getline(table_solution, buf) || buf[0] != '-') {
+		std::cerr << "EOF or parsing error!" << std::endl;
+		return 1;
+	}
+	while (getline(table_solution, buf) && buf.length() > 0) {
+		size_t P = buf.find('P');
+		size_t V = buf.find('*');
+		if (P == std::string::npos || V == std::string::npos) {
+			std::cerr << "parsing error!" << std::endl;
+			return 1;
+		}
+		std::string subP = buf.substr(P+1);
 		size_t L;
 		int pty = std::stoi(subP, &L);
 		std::string subL = subP.substr(L+1);
-		size_t V;
-		int line = std::stoi(subL, &V);
-		std::string subV = subL.substr(V);
+		int line = std::stoi(subL);
+		std::string subV = buf.substr(V+1);
 		int val = std::stoi(subV);
 		if (pty < 0 || pty >= parities || line < 0 || line >= parities || val < 0 || val > 1) {
 			std::cerr << "parsing or bound error!" << std::endl;

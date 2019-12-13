@@ -1,6 +1,6 @@
 
 GHDL = ghdl
-LP_SOLVE = lp_solve
+GLPSOL = glpsol
 
 .PHONY: vector
 vector: cnp_vector_tb_exp.txt dec_vector_tb_exp.txt cnp_vector_tb_out.txt dec_vector_tb_out.txt
@@ -17,7 +17,7 @@ vcd: cnp_scalar_tb.vcd dec_scalar_tb.vcd
 .PHONY: table
 table: table_input.txt work/generate_table_model_txt work/generate_table_vector_txt
 	work/generate_table_model_txt
-	$(LP_SOLVE) table_model.txt > table_solution.txt
+	$(GLPSOL) -o table_solution.txt --lp table_model.txt
 	work/generate_table_vector_txt
 
 .PRECIOUS: cnp_scalar_tb_out.txt

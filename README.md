@@ -30,7 +30,7 @@ Run ```make vcd``` to generate scalar version waveforms and watch them via ```gt
 
 Prerequisites:
 
-* [lp_solve](http://lpsolve.sourceforge.net/5.5/) to solve linear programming problems.
+* [GLPK](https://www.gnu.org/software/glpk/) to solve linear programming problems.
 * C++ compiler to build the model and table generators.
 
 Store new table in ```table_vector.txt``` while making sure that the constants in ```ldpc_scalar.vhd```, ```ldpc_vector.vhd```, ```ldpc_scalar.hh``` and ```ldpc_vector.hh``` match.
