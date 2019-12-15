@@ -54,15 +54,18 @@ dec_vector_tb.vcd: dec_vector_tb dec_vector_tb_inp.txt
 
 work/ldpc_scalar.o: ldpc_scalar.vhd
 work/ldpc_vector.o: ldpc_vector.vhd work/ldpc_scalar.o
+work/table_scalar.o: table_scalar.vhd work/ldpc_scalar.o
 work/table_vector.o: table_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o
 work/add_scalar.o: add_scalar.vhd work/ldpc_scalar.o
 work/add_vector.o: add_vector.vhd work/ldpc_vector.o work/add_scalar.o
 work/bnl_scalar.o: bnl_scalar.vhd work/ldpc_scalar.o work/ldpc_scalar.o
 work/bnl_vector.o: bnl_vector.vhd work/ldpc_vector.o work/bnl_scalar.o
+work/cnt_scalar.o: cnt_scalar.vhd work/ldpc_scalar.o work/table_scalar.o
 work/cnt_vector.o: cnt_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/table_vector.o
 work/buf_scalar.o: buf_scalar.vhd work/ldpc_scalar.o
 work/fub_scalar.o: fub_scalar.vhd work/ldpc_scalar.o
 work/buf_vector.o: buf_vector.vhd work/ldpc_vector.o work/ldpc_scalar.o work/fub_scalar.o
+work/loc_scalar.o: loc_scalar.vhd work/ldpc_scalar.o work/table_scalar.o
 work/loc_vector.o: loc_vector.vhd work/ldpc_vector.o work/table_vector.o
 work/rol_vector.o: rol_vector.vhd work/ldpc_vector.o
 work/ror_vector.o: ror_vector.vhd work/ldpc_vector.o
