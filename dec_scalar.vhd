@@ -28,10 +28,11 @@ architecture rtl of dec_scalar is
 	signal bnl_wpos, bnl_rpos : scalar_location;
 	signal bnl_isft, bnl_osft : csft_scalar;
 	signal loc_wren, loc_rden : boolean := false;
-	signal loc_wpos, loc_rpos : scalar_location;
-	signal loc_ioff, loc_ooff : scalar_offset;
+	signal loc_wpos, loc_rpos : block_location;
+	signal loc_ioff, loc_ooff : block_offset;
+	signal loc_ishi, loc_oshi : block_shift;
 	signal cnt_wren : boolean := false;
-	signal cnt_wpos, cnt_rpos : natural range 0 to scalar_parities_max-1;
+	signal cnt_wpos, cnt_rpos : natural range 0 to block_parities_max-1;
 	signal cnt_icnt, cnt_ocnt : count_scalar;
 	signal cnp_start : boolean := false;
 	signal cnp_count : count_scalar;
@@ -39,6 +40,7 @@ architecture rtl of dec_scalar is
 	signal cnp_iseq, cnp_oseq : sequence_scalar;
 	signal cnp_ivsft, cnp_ovsft : vsft_scalar;
 	signal cnp_ocsft : csft_scalar;
+	signal cnp_iwdf, cnp_owdf : boolean;
 	signal cnp_iloc, cnp_oloc : scalar_location;
 	signal cnp_ioff, cnp_ooff : scalar_offset;
 	signal sub_clken : boolean;
@@ -46,9 +48,11 @@ architecture rtl of dec_scalar is
 	signal sub_icsft, inv_sub_icsft : csft_scalar;
 	signal add_ivsft, add_ovsft : vsft_scalar;
 	signal add_icsft : csft_scalar;
-	signal ptys : scalar_parities := init_scalar_parities;
-	signal msgs : scalar_messages := CODE_SCALARS - init_scalar_parities;
-	signal inp_pty : natural range 0 to scalar_parities_max;
+	signal pty_blocks : block_parities := init_block_parities;
+	signal msg_scalars : scalar_messages := BLOCK_SCALARS * (CODE_BLOCKS - init_block_parities);
+	signal inp_pty : natural range 0 to block_parities_max;
+	subtype block_scalar is natural range 0 to block_scalars-1;
+	signal inp_bs : block_scalar;
 	signal prev_start : boolean := false;
 	type swap_start_delays is array (1 to 2) of boolean;
 	signal swap_start_d : swap_start_delays := (others => false);
@@ -61,10 +65,15 @@ architecture rtl of dec_scalar is
 	signal inp_num : num_scalar := 0;
 	signal inp_cnt : count_scalar := degree_max;
 	signal inp_loc : scalar_location;
+	signal inp_blk, inp_blk0 : block_location;
 	type out_stages is array (1 to 3) of boolean;
 	signal out_stage : out_stages := (others => false);
 	type out_off_delays is array (1 to 2) of scalar_offset;
 	signal out_off_d : out_off_delays;
+	type out_wdf_delays is array (1 to 2) of boolean;
+	signal out_wdf_d : out_wdf_delays;
+	type inp_bs_delays is array (1 to 2) of block_scalar;
+	signal inp_bs_d : inp_bs_delays;
 	type inp_num_delays is array (1 to 6) of num_scalar;
 	signal inp_num_d : inp_num_delays;
 	type inp_cnt_delays is array (1 to 6) of count_scalar;
@@ -73,6 +82,8 @@ architecture rtl of dec_scalar is
 	signal inp_seq_d : inp_seq_delays;
 	type inp_loc_delays is array (1 to 6) of scalar_location;
 	signal inp_loc_d : inp_loc_delays;
+	type inp_wdf_delays is array (1 to 4) of boolean;
+	signal inp_wdf_d : inp_wdf_delays;
 	type inp_off_delays is array (1 to 4) of scalar_offset;
 	signal inp_off_d : inp_off_delays;
 
@@ -86,7 +97,8 @@ begin
 		port map (clock,
 			loc_wren, loc_rden,
 			loc_wpos, loc_rpos,
-			loc_ioff, loc_ooff);
+			loc_ioff, loc_ooff,
+			loc_ishi, loc_oshi);
 
 	var_rden <= not cnp_busy;
 	var_inst : entity work.var_scalar
@@ -116,6 +128,7 @@ begin
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
 			cnp_ocsft,
+			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff);
 
@@ -140,13 +153,13 @@ begin
 				swap_start_d(1) <= prev_start;
 				prev_start <= istart;
 				swap_stage(0) <= true;
-			elsif swap_cs < msgs then
+			elsif swap_cs < msg_scalars then
 				swap_start_d(1) <= false;
 				swap_cs <= swap_cs + 1;
 --				report "MSG" & HT & integer'image(swap_cs) & HT & integer'image(swap_bs);
 			elsif swap_bs /= block_scalars then
 				if swap_cs = code_scalars-block_scalars then
-					swap_cs <= msgs;
+					swap_cs <= msg_scalars;
 					swap_bs <= swap_bs + 1;
 				else
 					swap_cs <= swap_cs + block_scalars;
@@ -192,32 +205,50 @@ begin
 					if inp_num = inp_cnt then
 						inp_num <= 0;
 						inp_cnt <= cnt_ocnt;
-						if inp_pty+1 = ptys then
-							if inp_seq+1 = iterations_max then
-								inp_stage(0) <= false;
+						if inp_bs+1 = block_scalars then
+							inp_bs <= 0;
+							if inp_pty+1 = pty_blocks then
+								if inp_seq+1 = iterations_max then
+									inp_stage(0) <= false;
+								else
+									inp_seq <= inp_seq + 1;
+									inp_pty <= 0;
+								end if;
 							else
-								inp_seq <= inp_seq + 1;
-								inp_pty <= 0;
+								inp_pty <= inp_pty + 1;
 							end if;
 						else
-							inp_pty <= inp_pty + 1;
+							inp_bs <= inp_bs + 1;
 						end if;
 					else
 						inp_num <= inp_num + 1;
 					end if;
 					if inp_num = 0 then
-						if inp_pty = 0 then
+						if inp_pty = 0 and inp_bs = 0 then
 							inp_loc <= 0;
 						end if;
-					elsif inp_loc+1 /= scalar_locations_max-1 then
+					elsif inp_loc+1 /= scalar_locations_max then
 						inp_loc <= inp_loc + 1;
 					end if;
-					if inp_num = 0 then
-						if inp_pty+1 = ptys then
+					if inp_num = 0 and inp_bs+1 = block_scalars then
+						if inp_pty+1 = pty_blocks then
 							cnt_rpos <= 0;
-						elsif cnt_rpos+1 /= scalar_parities_max-1 then
+						elsif cnt_rpos+1 /= block_parities_max then
 							cnt_rpos <= cnt_rpos + 1;
 						end if;
+					end if;
+					if inp_num = 0 then
+						if inp_pty = 0 and inp_bs = 0 then
+							inp_blk <= 0;
+							inp_blk0 <= 0;
+						else
+							inp_blk <= inp_blk0;
+							if inp_bs+1 = block_scalars then
+								inp_blk0 <= inp_blk;
+							end if;
+						end if;
+					elsif inp_blk+1 /= block_locations_max then
+						inp_blk <= inp_blk + 1;
 					end if;
 				end if;
 			else
@@ -227,12 +258,18 @@ begin
 				inp_pty <= 0;
 				inp_seq <= 0;
 				inp_loc <= 0;
+				inp_blk <= 0;
+				inp_blk0 <= 0;
+				inp_bs <= 0;
 			end if;
 
---			report boolean'image(inp_stage(0)) & HT & boolean'image(cnp_busy) & HT & integer'image(inp_seq) & HT & integer'image(inp_cnt) & HT & integer'image(inp_num) & HT & integer'image(inp_loc) & HT & integer'image(inp_pty);
+--			report boolean'image(inp_stage(0)) & HT & boolean'image(cnp_busy) & HT & integer'image(inp_seq) & HT &
+--				integer'image(inp_cnt) & HT & integer'image(inp_num) & HT & integer'image(inp_bs) & HT &
+--				integer'image(inp_blk) & HT & integer'image(inp_loc) & HT & integer'image(inp_pty);
 
 			if inp_stage(0) and not cnp_busy then
-				loc_rpos <= inp_loc;
+				loc_rpos <= inp_blk;
+				inp_bs_d(1) <= inp_bs;
 				inp_num_d(1) <= inp_num;
 				inp_cnt_d(1) <= inp_cnt;
 				inp_seq_d(1) <= inp_seq;
@@ -241,6 +278,7 @@ begin
 
 			inp_stage(1) <= inp_stage(0);
 			if inp_stage(1) and not cnp_busy then
+				inp_bs_d(2) <= inp_bs_d(1);
 				inp_num_d(2) <= inp_num_d(1);
 				inp_cnt_d(2) <= inp_cnt_d(1);
 				inp_seq_d(2) <= inp_seq_d(1);
@@ -249,13 +287,19 @@ begin
 
 			inp_stage(2) <= inp_stage(1);
 			if inp_stage(2) and not cnp_busy then
-				var_rpos <= loc_ooff;
+				if loc_oshi + inp_bs_d(2) < block_scalars then
+					var_rpos <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2);
+					inp_off_d(1) <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2);
+				else
+					var_rpos <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2) - block_scalars;
+					inp_off_d(1) <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2) - block_scalars;
+				end if;
+				inp_wdf_d(1) <= inp_bs_d(2) = 0 and loc_ooff = code_blocks-1 and loc_oshi = block_scalars-1;
 				bnl_rpos <= inp_loc_d(2);
 				inp_num_d(3) <= inp_num_d(2);
 				inp_cnt_d(3) <= inp_cnt_d(2);
 				inp_seq_d(3) <= inp_seq_d(2);
 				inp_loc_d(3) <= inp_loc_d(2);
-				inp_off_d(1) <= loc_ooff;
 			end if;
 
 			inp_stage(3) <= inp_stage(2);
@@ -264,6 +308,7 @@ begin
 				inp_cnt_d(4) <= inp_cnt_d(3);
 				inp_seq_d(4) <= inp_seq_d(3);
 				inp_loc_d(4) <= inp_loc_d(3);
+				inp_wdf_d(2) <= inp_wdf_d(1);
 				inp_off_d(2) <= inp_off_d(1);
 			end if;
 
@@ -279,6 +324,7 @@ begin
 				inp_cnt_d(5) <= inp_cnt_d(4);
 				inp_seq_d(5) <= inp_seq_d(4);
 				inp_loc_d(5) <= inp_loc_d(4);
+				inp_wdf_d(3) <= inp_wdf_d(2);
 				inp_off_d(3) <= inp_off_d(2);
 			end if;
 
@@ -288,6 +334,7 @@ begin
 				inp_cnt_d(6) <= inp_cnt_d(5);
 				inp_seq_d(6) <= inp_seq_d(5);
 				inp_loc_d(6) <= inp_loc_d(5);
+				inp_wdf_d(4) <= inp_wdf_d(3);
 				inp_off_d(4) <= inp_off_d(3);
 			end if;
 
@@ -295,21 +342,27 @@ begin
 			if inp_stage(6) and not cnp_busy then
 				cnp_start <= inp_num_d(6) = 0;
 				cnp_count <= inp_cnt_d(6);
-				cnp_ivsft <= sub_ovsft;
+				if inp_wdf_d(4) then
+					cnp_ivsft <= (false, vmag_scalar'high);
+				else
+					cnp_ivsft <= sub_ovsft;
+				end if;
 				cnp_iseq <= inp_seq_d(6);
 				cnp_iloc <= inp_loc_d(6);
+				cnp_iwdf <= inp_wdf_d(4);
 				cnp_ioff <= inp_off_d(4);
 			end if;
 
---			report boolean'image(cnp_start) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & integer'image(cnp_count) & HT &
+--			report boolean'image(cnp_start) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & boolean'image(cnp_iwdf) & HT & integer'image(cnp_count) & HT &
 --				integer'image(vsft_to_soft(cnp_ivsft));
 
---			report boolean'image(cnp_valid) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT &
+--			report boolean'image(cnp_valid) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT & boolean'image(cnp_owdf) & HT &
 --				integer'image(vsft_to_soft(cnp_ovsft)) & HT & integer'image(csft_to_soft(cnp_ocsft));
 
 			if cnp_valid then
 				add_ivsft <= cnp_ovsft;
 				add_icsft <= cnp_ocsft;
+				out_wdf_d(1) <= cnp_owdf;
 				out_off_d(1) <= cnp_ooff;
 				bnl_wren <= true;
 				bnl_wpos <= cnp_oloc;
@@ -321,11 +374,12 @@ begin
 			out_stage(1) <= cnp_valid;
 			if out_stage(1) then
 				out_off_d(2) <= out_off_d(1);
+				out_wdf_d(2) <= out_wdf_d(1);
 			end if;
 
 			out_stage(2) <= out_stage(1);
 			if out_stage(2) then
-				var_wren <= true;
+				var_wren <= not out_wdf_d(2);
 				var_wpos <= out_off_d(2);
 				var_isft <= add_ovsft;
 			end if;

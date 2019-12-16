@@ -9,8 +9,9 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <random>
 #include "ldpc_scalar.hh"
 
-int offsets[SCALAR_LOCATIONS_MAX];
-int counts[SCALAR_PARITIES_MAX];
+int offsets[BLOCK_LOCATIONS_MAX];
+int shifts[BLOCK_LOCATIONS_MAX];
+int counts[BLOCK_PARITIES_MAX];
 int parities = 0;
 
 #include "dec_scalar.hh"
@@ -18,9 +19,13 @@ int parities = 0;
 int main()
 {
 	std::ifstream table_txt("table_scalar.txt");
-	for (int loc = 0; table_txt >> counts[parities]; ++parities)
-		for (int num = 0; num < counts[parities]; ++num, ++loc)
+	for (int loc = 0; table_txt >> counts[parities]; ++parities) {
+		for (int num = 0; num < counts[parities]; ++num, ++loc) {
 			table_txt >> offsets[loc];
+			table_txt.ignore(1, ':');
+			table_txt >> shifts[loc];
+		}
+	}
 	std::ifstream soft_input("dec_scalar_tb_inp.txt");
 	std::ofstream soft_output("dec_scalar_tb_exp.txt");
 	while (soft_input.good()) {

@@ -11,15 +11,15 @@ entity cnt_scalar is
 	port (
 		clock : in std_logic;
 		wren : in boolean;
-		wpos : in natural range 0 to scalar_parities_max-1;
-		rpos : in natural range 0 to scalar_parities_max-1;
+		wpos : in natural range 0 to block_parities_max-1;
+		rpos : in natural range 0 to block_parities_max-1;
 		icnt : in count_scalar;
 		ocnt : out count_scalar
 	);
 end cnt_scalar;
 
 architecture rtl of cnt_scalar is
-	signal cnts : scalar_counts := init_scalar_counts;
+	signal cnts : block_counts := init_block_counts;
 begin
 	process (clock)
 	begin

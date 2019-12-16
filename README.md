@@ -41,7 +41,6 @@ If not, copy the new table to ```table_input.txt``` and run ```make table``` to 
 
 ### TODO
 
-* Reduce table size for scalar decoder by factor of 360
 * Tool for generating code table entries
 * Interface for switching or replacing code table
 * Shortening the pipeline if timing analysis allows it
@@ -58,6 +57,7 @@ If not, copy the new table to ```table_input.txt``` and run ```make table``` to 
 * Reference decoder in C++
 * Tool for checking code table entries for data hazards
 * Tool for enforcing below rules for code table entries
+* Reduced table size for scalar decoder
 
 ### [ldpc_scalar.vhd](ldpc_scalar.vhd)
 

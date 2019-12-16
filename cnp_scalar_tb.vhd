@@ -23,6 +23,8 @@ architecture behavioral of cnp_scalar_tb is
 	signal cnp_ivsft : vsft_scalar := soft_to_vsft(0);
 	signal cnp_ovsft : vsft_scalar;
 	signal cnp_ocsft : csft_scalar;
+	signal cnp_iwdf : boolean;
+	signal cnp_owdf : boolean;
 	signal cnp_iloc : scalar_location;
 	signal cnp_oloc : scalar_location;
 	signal cnp_ioff : scalar_offset;
@@ -35,6 +37,7 @@ begin
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
 			cnp_ocsft,
+			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff);
 
@@ -75,6 +78,7 @@ begin
 		file input : text open read_mode is "cnp_scalar_tb_inp.txt";
 		variable buf : line;
 		variable val : soft_scalar;
+		variable wdf : boolean;
 		variable loc : scalar_location;
 		variable off : scalar_offset;
 		variable cnt : count_scalar;
@@ -94,6 +98,8 @@ begin
 					cnp_start <= true;
 				elsif buf'length /= 0 then
 					cnp_start <= false;
+					read(buf, wdf);
+					cnp_iwdf <= wdf;
 					read(buf, loc);
 					cnp_iloc <= loc;
 					read(buf, off);
@@ -116,6 +122,7 @@ begin
 		file output : text open write_mode is "cnp_scalar_tb_out.txt";
 		variable buf : line;
 		variable val : soft_scalar;
+		variable wdf : boolean;
 		variable loc : scalar_location;
 		variable off : scalar_offset;
 		variable seq : sequence_scalar;
@@ -126,6 +133,9 @@ begin
 					seq := cnp_oseq;
 					write(buf, seq);
 				end if;
+				write(buf, HT);
+				wdf := cnp_owdf;
+				write(buf, wdf);
 				write(buf, HT);
 				loc := cnp_oloc;
 				write(buf, loc);

@@ -15,6 +15,8 @@ entity buf_scalar is
 		ovsft : out vsft_scalar;
 		icmag : in cmag_scalar;
 		ocmag : out cmag_scalar;
+		iwdf : in boolean;
+		owdf : out boolean;
 		iloc : in scalar_location;
 		oloc : out scalar_location;
 		ioff : in scalar_offset;
@@ -23,6 +25,8 @@ entity buf_scalar is
 end buf_scalar;
 
 architecture rtl of buf_scalar is
+	type wdfs_array is array (0 to degree_max-1) of boolean;
+	signal wdfs : wdfs_array;
 	type vsft_array is array (0 to degree_max-1) of vsft_scalar;
 	signal vsfts : vsft_array;
 	type cmag_array is array (0 to degree_max-1) of cmag_scalar;
@@ -36,11 +40,13 @@ begin
 	begin
 		if rising_edge(clock) then
 			if wren then
+				wdfs(addr) <= iwdf;
 				vsfts(addr) <= ivsft;
 				cmags(addr) <= icmag;
 				locs(addr) <= iloc;
 				offs(addr) <= ioff;
 			end if;
+			owdf <= wdfs(addr);
 			ovsft <= vsfts(addr);
 			ocmag <= cmags(addr);
 			oloc <= locs(addr);

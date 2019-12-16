@@ -18,6 +18,8 @@ entity cnp_scalar is
 		ivsft : in vsft_scalar;
 		ovsft : out vsft_scalar;
 		ocsft : out csft_scalar;
+		iwdf : in boolean;
+		owdf : out boolean;
 		iloc : in scalar_location;
 		oloc : out scalar_location;
 		ioff : in scalar_offset;
@@ -45,6 +47,8 @@ architecture rtl of cnp_scalar is
 	signal buf_ovsft : vsft_scalar;
 	signal buf_icmag : cmag_scalar;
 	signal buf_ocmag : cmag_scalar;
+	signal buf_iwdf : boolean;
+	signal buf_owdf : boolean;
 	signal buf_iloc : scalar_location;
 	signal buf_oloc : scalar_location;
 	signal buf_ioff : scalar_offset;
@@ -55,12 +59,14 @@ begin
 			buf_wren, buf_addr,
 			buf_ivsft, buf_ovsft,
 			buf_icmag, buf_ocmag,
+			buf_iwdf, buf_owdf,
 			buf_iloc, buf_oloc,
 			buf_ioff, buf_ooff);
 
 	icmag <= min_sum(ivsft.mag);
 	ovsft <= buf_ovsft;
 	ocsft <= (opty xor buf_ovsft.sgn, select_other(buf_ocmag, omin));
+	owdf <= buf_owdf;
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;
 	finalize <= false when not this_start else num = prev_count when shorter else num = this_count;
@@ -120,6 +126,7 @@ begin
 				buf_addr <= num;
 				buf_ivsft <= ivsft;
 				buf_icmag <= icmag;
+				buf_iwdf <= iwdf;
 				buf_iloc <= iloc;
 				buf_ioff <= ioff;
 			else
