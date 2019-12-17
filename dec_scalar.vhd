@@ -43,6 +43,10 @@ architecture rtl of dec_scalar is
 	signal cnp_iwdf, cnp_owdf : boolean;
 	signal cnp_iloc, cnp_oloc : scalar_location;
 	signal cnp_ioff, cnp_ooff : scalar_offset;
+	signal off_clken : boolean;
+	signal off_ioff : block_offset;
+	signal off_ishi, off_ibs : block_shift;
+	signal off_ooff : scalar_offset;
 	signal sub_clken : boolean;
 	signal sub_ivsft, sub_ovsft : vsft_scalar;
 	signal sub_icsft, inv_sub_icsft : csft_scalar;
@@ -51,13 +55,12 @@ architecture rtl of dec_scalar is
 	signal pty_blocks : block_parities := init_block_parities;
 	signal msg_scalars : scalar_messages := BLOCK_SCALARS * (CODE_BLOCKS - init_block_parities);
 	signal inp_pty : natural range 0 to block_parities_max;
-	subtype block_scalar is natural range 0 to block_scalars-1;
-	signal inp_bs : block_scalar;
+	signal inp_bs : block_shift;
 	signal prev_start : boolean := false;
 	type swap_start_delays is array (1 to 2) of boolean;
 	signal swap_start_d : swap_start_delays := (others => false);
 	signal inp_seq, out_seq : sequence_scalar;
-	type inp_stages is array (0 to 6) of boolean;
+	type inp_stages is array (0 to 8) of boolean;
 	signal inp_stage : inp_stages := (others => false);
 	type swap_stages is array (0 to 3) of boolean;
 	signal swap_stage : swap_stages := (others => false);
@@ -72,17 +75,17 @@ architecture rtl of dec_scalar is
 	signal out_off_d : out_off_delays;
 	type out_wdf_delays is array (1 to 2) of boolean;
 	signal out_wdf_d : out_wdf_delays;
-	type inp_bs_delays is array (1 to 2) of block_scalar;
+	type inp_bs_delays is array (1 to 2) of block_shift;
 	signal inp_bs_d : inp_bs_delays;
-	type inp_num_delays is array (1 to 6) of num_scalar;
+	type inp_num_delays is array (1 to 8) of num_scalar;
 	signal inp_num_d : inp_num_delays;
-	type inp_cnt_delays is array (1 to 6) of count_scalar;
+	type inp_cnt_delays is array (1 to 8) of count_scalar;
 	signal inp_cnt_d : inp_cnt_delays;
-	type inp_seq_delays is array (1 to 6) of sequence_scalar;
+	type inp_seq_delays is array (1 to 8) of sequence_scalar;
 	signal inp_seq_d : inp_seq_delays;
-	type inp_loc_delays is array (1 to 6) of scalar_location;
+	type inp_loc_delays is array (1 to 8) of scalar_location;
 	signal inp_loc_d : inp_loc_delays;
-	type inp_wdf_delays is array (1 to 4) of boolean;
+	type inp_wdf_delays is array (1 to 8) of boolean;
 	signal inp_wdf_d : inp_wdf_delays;
 	type inp_off_delays is array (1 to 4) of scalar_offset;
 	signal inp_off_d : inp_off_delays;
@@ -91,6 +94,7 @@ architecture rtl of dec_scalar is
 	begin
 		return (not val.sgn, val.mag);
 	end function;
+
 begin
 	loc_rden <= not cnp_busy;
 	loc_inst : entity work.loc_scalar
@@ -131,6 +135,12 @@ begin
 			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff);
+
+	off_clken <= not cnp_busy;
+	off_inst : entity work.off_scalar
+		port map (clock, off_clken,
+			off_ioff, off_ishi,
+			off_ibs, off_ooff);
 
 	sub_clken <= not cnp_busy;
 	inv_sub_icsft <= inv(sub_icsft);
@@ -287,15 +297,10 @@ begin
 
 			inp_stage(2) <= inp_stage(1);
 			if inp_stage(2) and not cnp_busy then
-				if loc_oshi + inp_bs_d(2) < block_scalars then
-					var_rpos <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2);
-					inp_off_d(1) <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2);
-				else
-					var_rpos <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2) - block_scalars;
-					inp_off_d(1) <= block_scalars * loc_ooff + loc_oshi + inp_bs_d(2) - block_scalars;
-				end if;
 				inp_wdf_d(1) <= inp_bs_d(2) = 0 and loc_ooff = code_blocks-1 and loc_oshi = block_scalars-1;
-				bnl_rpos <= inp_loc_d(2);
+				off_ioff <= loc_ooff;
+				off_ishi <= loc_oshi;
+				off_ibs <= inp_bs_d(2);
 				inp_num_d(3) <= inp_num_d(2);
 				inp_cnt_d(3) <= inp_cnt_d(2);
 				inp_seq_d(3) <= inp_seq_d(2);
@@ -309,23 +314,18 @@ begin
 				inp_seq_d(4) <= inp_seq_d(3);
 				inp_loc_d(4) <= inp_loc_d(3);
 				inp_wdf_d(2) <= inp_wdf_d(1);
-				inp_off_d(2) <= inp_off_d(1);
 			end if;
 
 			inp_stage(4) <= inp_stage(3);
 			if inp_stage(4) and not cnp_busy then
-				sub_ivsft <= var_osft;
-				if inp_seq_d(4) = 0 then
-					sub_icsft <= (false, 0);
-				else
-					sub_icsft <= bnl_osft;
-				end if;
+				var_rpos <= off_ooff;
+				bnl_rpos <= inp_loc_d(4);
+				inp_off_d(1) <= off_ooff;
 				inp_num_d(5) <= inp_num_d(4);
 				inp_cnt_d(5) <= inp_cnt_d(4);
 				inp_seq_d(5) <= inp_seq_d(4);
 				inp_loc_d(5) <= inp_loc_d(4);
 				inp_wdf_d(3) <= inp_wdf_d(2);
-				inp_off_d(3) <= inp_off_d(2);
 			end if;
 
 			inp_stage(5) <= inp_stage(4);
@@ -335,21 +335,47 @@ begin
 				inp_seq_d(6) <= inp_seq_d(5);
 				inp_loc_d(6) <= inp_loc_d(5);
 				inp_wdf_d(4) <= inp_wdf_d(3);
-				inp_off_d(4) <= inp_off_d(3);
+				inp_off_d(2) <= inp_off_d(1);
 			end if;
 
 			inp_stage(6) <= inp_stage(5);
 			if inp_stage(6) and not cnp_busy then
-				cnp_start <= inp_num_d(6) = 0;
-				cnp_count <= inp_cnt_d(6);
-				if inp_wdf_d(4) then
+				sub_ivsft <= var_osft;
+				if inp_seq_d(6) = 0 then
+					sub_icsft <= (false, 0);
+				else
+					sub_icsft <= bnl_osft;
+				end if;
+				inp_num_d(7) <= inp_num_d(6);
+				inp_cnt_d(7) <= inp_cnt_d(6);
+				inp_seq_d(7) <= inp_seq_d(6);
+				inp_loc_d(7) <= inp_loc_d(6);
+				inp_wdf_d(5) <= inp_wdf_d(4);
+				inp_off_d(3) <= inp_off_d(2);
+			end if;
+
+			inp_stage(7) <= inp_stage(6);
+			if inp_stage(7) and not cnp_busy then
+				inp_num_d(8) <= inp_num_d(7);
+				inp_cnt_d(8) <= inp_cnt_d(7);
+				inp_seq_d(8) <= inp_seq_d(7);
+				inp_loc_d(8) <= inp_loc_d(7);
+				inp_wdf_d(6) <= inp_wdf_d(5);
+				inp_off_d(4) <= inp_off_d(3);
+			end if;
+
+			inp_stage(8) <= inp_stage(7);
+			if inp_stage(8) and not cnp_busy then
+				cnp_start <= inp_num_d(8) = 0;
+				cnp_count <= inp_cnt_d(8);
+				if inp_wdf_d(6) then
 					cnp_ivsft <= (false, vmag_scalar'high);
 				else
 					cnp_ivsft <= sub_ovsft;
 				end if;
-				cnp_iseq <= inp_seq_d(6);
-				cnp_iloc <= inp_loc_d(6);
-				cnp_iwdf <= inp_wdf_d(4);
+				cnp_iseq <= inp_seq_d(8);
+				cnp_iloc <= inp_loc_d(8);
+				cnp_iwdf <= inp_wdf_d(6);
 				cnp_ioff <= inp_off_d(4);
 			end if;
 

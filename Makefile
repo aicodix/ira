@@ -56,6 +56,7 @@ work/ldpc_scalar.o: ldpc_scalar.vhd
 work/ldpc_vector.o: ldpc_vector.vhd work/ldpc_scalar.o
 work/table_scalar.o: table_scalar.vhd work/ldpc_scalar.o
 work/table_vector.o: table_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o
+work/off_scalar.o: off_scalar.vhd work/ldpc_scalar.o
 work/add_scalar.o: add_scalar.vhd work/ldpc_scalar.o
 work/add_vector.o: add_vector.vhd work/ldpc_vector.o work/add_scalar.o
 work/bnl_scalar.o: bnl_scalar.vhd work/ldpc_scalar.o work/ldpc_scalar.o
@@ -74,7 +75,7 @@ work/var_vector.o: var_vector.vhd work/ldpc_vector.o work/var_scalar.o
 work/wdf_vector.o: wdf_vector.vhd work/ldpc_vector.o
 work/cnp_scalar.o: cnp_scalar.vhd work/ldpc_scalar.o work/buf_scalar.o
 work/cnp_vector.o: cnp_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/buf_vector.o
-work/dec_scalar.o: dec_scalar.vhd work/ldpc_scalar.o work/table_scalar.o work/loc_scalar.o work/var_scalar.o work/cnt_scalar.o work/bnl_scalar.o work/cnp_scalar.o work/add_scalar.o
+work/dec_scalar.o: dec_scalar.vhd work/ldpc_scalar.o work/table_scalar.o work/loc_scalar.o work/var_scalar.o work/cnt_scalar.o work/bnl_scalar.o work/cnp_scalar.o work/add_scalar.o work/off_scalar.o
 work/dec_vector.o: dec_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/table_vector.o work/loc_vector.o work/wdf_vector.o work/var_vector.o work/cnt_vector.o work/bnl_vector.o work/cnp_vector.o work/rol_vector.o work/ror_vector.o work/add_vector.o work/add_vector.o
 work/cnp_scalar_tb.o: cnp_scalar_tb.vhd work/ldpc_scalar.o work/cnp_scalar.o
 work/cnp_vector_tb.o: cnp_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/cnp_vector.o
