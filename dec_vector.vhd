@@ -289,13 +289,13 @@ begin
 						if inp_pty = 0 then
 							inp_loc <= 0;
 						end if;
-					elsif inp_loc+1 /= vector_locations_max-1 then
+					elsif inp_loc+1 /= vector_locations_max then
 						inp_loc <= inp_loc + 1;
 					end if;
 					if inp_num = 0 then
 						if inp_pty+1 = ptys then
 							cnt_rpos <= 0;
-						elsif cnt_rpos+1 /= vector_parities_max-1 then
+						elsif cnt_rpos+1 /= vector_parities_max then
 							cnt_rpos <= cnt_rpos + 1;
 						end if;
 					end if;
