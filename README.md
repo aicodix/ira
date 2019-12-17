@@ -26,22 +26,24 @@ Compare resulting ```dec_scalar_tb_out.txt``` with ```dec_scalar_tb_exp.txt``` f
 
 Run ```make vcd``` to generate scalar version waveforms and watch them via ```gtkwave cnp_scalar_tb.vcd```.
 
+### Adding new scalar code tables
+
+Checkout [tables](http://github.com/aicodix/tables) for suitable code tables.
+
+Store new table in ```table_scalar.txt``` while making sure that the constants in ```ldpc_scalar.vhd``` and ```ldpc_scalar.hh``` match.
+
+Run ```make scalar``` to see if the new table is free from data hazards by comparing ```dec_scalar_tb_out.txt``` with ```dec_scalar_tb_exp.txt```.
+
 ### Adding new vector code tables
 
-Prerequisites:
-
-* [GLPK](https://www.gnu.org/software/glpk/) to solve linear programming problems.
-* C++ compiler to build the model and table generators.
+Checkout [tables](http://github.com/aicodix/tables) for suitable code tables.
 
 Store new table in ```table_vector.txt``` while making sure that the constants in ```ldpc_scalar.vhd```, ```ldpc_vector.vhd```, ```ldpc_scalar.hh``` and ```ldpc_vector.hh``` match.
 
-Run ```make vector``` to see if the new table is already free from data hazards by comparing ```cnp_vector_tb_out.txt``` with ```cnp_vector_tb_exp.txt```.
-
-If not, copy the new table to ```table_input.txt``` and run ```make table``` to generate ```table_vector.txt``` from ```table_input.txt``` using the ```table_solution.txt``` computed from ```table_model.txt```.
+Run ```make vector``` to see if the new table is free from data hazards by comparing ```dec_vector_tb_out.txt``` with ```dec_vector_tb_exp.txt```.
 
 ### TODO
 
-* Tool for generating code table entries
 * Interface for switching or replacing code table
 * Shortening the pipeline if timing analysis allows it
 * Self-Corrected Min-Sum
@@ -58,6 +60,7 @@ If not, copy the new table to ```table_input.txt``` and run ```make table``` to 
 * Tool for checking code table entries for data hazards
 * Tool for enforcing below rules for code table entries
 * Reduced table size for scalar decoder
+* Tool for generating code table entries
 
 ### [ldpc_scalar.vhd](ldpc_scalar.vhd)
 
@@ -80,14 +83,15 @@ vector LDPC decoder configuration
 Transformed DVB T2 B7 code table for scalar decoder:
 
 * Rows are sorted by location offsets to maximally space out same offsets on consecutive columns.
-* Columns are not sorted by count.
+* Columns are sorted by count to minimize pipeline stalls.
 
 ### [table_input.txt](table_input.txt)
 
 Transformed DVB T2 B7 code table for vector length of 15:
 
-* Rows are sorted by location offsets to maximally space out same offsets on consecutive columns.
-* Columns are not sorted by count.
+* Rows are sorted by location offsets to keep same offsets consecutive.
+* Above sorting helps maximally spacing out same offsets on consecutive columns.
+* Columns are sorted by count to minimize pipeline stalls.
 
 ### [table_vector.txt](table_vector.txt)
 
@@ -96,7 +100,7 @@ Transformed and manipulated DVB T2 B7 code table for vector length of 15:
 * Rows are sorted by location offsets to keep same offsets consecutive.
 * Above sorting helps maximally spacing out same offsets on consecutive columns.
 * Swapped columns to avoid same offsets on consecutive columns.
-* Columns are not sorted by count.
+* Columns are sorted by count to minimize pipeline stalls.
 
 ### [check_table_scalar_txt.hh](check_table_scalar_txt.hh)
 
