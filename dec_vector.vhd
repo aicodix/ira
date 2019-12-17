@@ -54,11 +54,11 @@ architecture rtl of dec_vector is
 	signal cnp_iloc, cnp_oloc : vector_location;
 	signal cnp_ioff, cnp_ooff : vector_offset;
 	signal cnp_ishi, cnp_oshi : vector_shift;
-	signal rol_shift : natural range 0 to soft_vector'length-1;
-	signal rol_ivsft, rol_ovsft : vsft_vector;
-	signal ror_clken : boolean;
 	signal ror_shift : natural range 0 to soft_vector'length-1;
 	signal ror_ivsft, ror_ovsft : vsft_vector;
+	signal rol_clken : boolean;
+	signal rol_shift : natural range 0 to soft_vector'length-1;
+	signal rol_ivsft, rol_ovsft : vsft_vector;
 	signal sub_clken : boolean;
 	signal sub_ivsft, sub_ovsft : vsft_vector;
 	signal sub_icsft, inv_sub_icsft : csft_vector;
@@ -162,16 +162,16 @@ begin
 			cnp_ioff, cnp_ooff,
 			cnp_ishi, cnp_oshi);
 
-	rol_inst : entity work.rol_vector
-		port map (clock, true,
-			rol_shift,
-			rol_ivsft, rol_ovsft);
-
-	ror_clken <= not cnp_busy;
 	ror_inst : entity work.ror_vector
-		port map (clock, ror_clken,
+		port map (clock, true,
 			ror_shift,
 			ror_ivsft, ror_ovsft);
+
+	rol_clken <= not cnp_busy;
+	rol_inst : entity work.rol_vector
+		port map (clock, rol_clken,
+			rol_shift,
+			rol_ivsft, rol_ovsft);
 
 	sub_clken <= not cnp_busy;
 	inv_sub_icsft <= inv(sub_icsft);
@@ -377,8 +377,8 @@ begin
 					wdf_wpos <= inp_loc_d(4);
 					wdf_iwdf <= first_wdf;
 				end if;
-				ror_shift <= inp_shi_d(2);
-				ror_ivsft <= var_osft;
+				rol_shift <= inp_shi_d(2);
+				rol_ivsft <= var_osft;
 				bnl_rpos <= inp_loc_d(4);
 				inp_num_d(5) <= inp_num_d(4);
 				inp_cnt_d(5) <= inp_cnt_d(4);
@@ -405,11 +405,11 @@ begin
 
 			inp_stage(6) <= inp_stage(5);
 			if inp_stage(6) and not cnp_busy then
-				if inp_off_d(4) = code_vectors-1 and inp_shi_d(4) = 1 then
-					prev_vsft <= ror_ovsft(vsft_vector'low);
-					sub_ivsft <= soft_to_vsft(vmag_scalar'high) & ror_ovsft(vsft_vector'low+1 to vsft_vector'high);
+				if inp_off_d(4) = code_vectors-1 and inp_shi_d(4) = vector_scalars-1 then
+					prev_vsft <= rol_ovsft(vsft_vector'low);
+					sub_ivsft <= soft_to_vsft(vmag_scalar'high) & rol_ovsft(vsft_vector'low+1 to vsft_vector'high);
 				else
-					sub_ivsft <= ror_ovsft;
+					sub_ivsft <= rol_ovsft;
 				end if;
 				if inp_seq_d(6) = 0 then
 					sub_icsft <= (others => (false, 0));
@@ -481,11 +481,11 @@ begin
 
 			out_stage(2) <= out_stage(1);
 			if out_stage(2) then
-				rol_shift <= out_shi_d(2);
-				if out_off_d(2) = code_vectors-1 and out_shi_d(2) = 1 then
-					rol_ivsft <= prev_vsft & add_ovsft(vsft_vector'low+1 to vsft_vector'high);
+				ror_shift <= out_shi_d(2);
+				if out_off_d(2) = code_vectors-1 and out_shi_d(2) = vector_scalars-1 then
+					ror_ivsft <= prev_vsft & add_ovsft(vsft_vector'low+1 to vsft_vector'high);
 				else
-					rol_ivsft <= add_ovsft;
+					ror_ivsft <= add_ovsft;
 				end if;
 				out_off_d(3) <= out_off_d(2);
 				out_wdf_d(3) <= out_wdf_d(2);
@@ -499,7 +499,7 @@ begin
 
 			out_stage(4) <= out_stage(3);
 			if out_stage(4) then
-				var_isft <= rol_ovsft;
+				var_isft <= ror_ovsft;
 				var_wpos <= out_off_d(4);
 				var_wren <= not out_wdf_d(4);
 			end if;

@@ -68,8 +68,8 @@ void dec_vector(int *output, const int *input)
 					else
 						wdf[num] = 0;
 				}
-				rot_vector(tmp[num], vars[off[num]], shi[num]);
-				if (off[num] == CODE_VECTORS-1 && shi[num] == 1) {
+				rot_vector(tmp[num], vars[off[num]], -shi[num]);
+				if (off[num] == CODE_VECTORS-1 && shi[num] == VECTOR_SCALARS-1) {
 					prev_val = tmp[num][0];
 					tmp[num][0] = VMAG_MAX;
 				}
@@ -83,11 +83,11 @@ void dec_vector(int *output, const int *input)
 			int first_wdf;
 			for (int num = 0; num < cnt; ++num) {
 				add_vector(tmp[num], inp[num], out[num]);
-				if (off[num] == CODE_VECTORS-1 && shi[num] == 1)
+				if (off[num] == CODE_VECTORS-1 && shi[num] == VECTOR_SCALARS-1)
 					tmp[num][0] = prev_val;
 				if (!wdf[num]) {
 					cpy_vector(bnl[num], out[num]);
-					rot_vector(vars[off[num]], tmp[num], -shi[num]);
+					rot_vector(vars[off[num]], tmp[num], shi[num]);
 				} else if (!seq) {
 					nul_vector(bnl[num]);
 				}
