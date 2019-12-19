@@ -8,6 +8,8 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #include <iostream>
 #include "ldpc_vector.hh"
 
+const int PIPELINE_LENGTH = 13;
+
 int main()
 {
 	int offsets[VECTOR_PARITIES_MAX][COUNT_MAX];
@@ -38,12 +40,15 @@ int main()
 		}
 	}
 	for (int pty0 = 0; pty0 < parities; ++pty0) {
-		int pty1 = (pty0 + 1) % parities;
-		for (int num0 = 0; num0 < counts[pty0]; ++num0) {
-			for (int num1 = 0; num1 < counts[pty1]; ++num1) {
-				if (offsets[pty0][num0] == offsets[pty1][num1]) {
-					std::cout << "consecutive parities " << pty0 << " and " << pty1 << " have same location offset " << offsets[pty0][num0] << std::endl;
-					++violations;
+		int delay = (PIPELINE_LENGTH + 2 * counts[pty0] - 1) / counts[pty0];
+		for (int dist = 1; dist < delay; ++dist) {
+			int pty1 = (pty0 + dist) % parities;
+			for (int num0 = 0; num0 < counts[pty0]; ++num0) {
+				for (int num1 = 0; num1 < counts[pty1]; ++num1) {
+					if (offsets[pty0][num0] == offsets[pty1][num1]) {
+						std::cout << "parities " << pty0 << " and " << pty1 << " have same location offset " << offsets[pty0][num0] << std::endl;
+						++violations;
+					}
 				}
 			}
 		}
