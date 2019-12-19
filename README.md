@@ -85,14 +85,6 @@ Transformed DVB T2 B7 code table for scalar decoder:
 * Rows are sorted by location offsets to maximally space out same offsets on consecutive columns.
 * Columns are sorted by count to minimize pipeline stalls.
 
-### [table_input.txt](table_input.txt)
-
-Transformed DVB T2 B7 code table for vector length of 15:
-
-* Rows are sorted by location offsets to keep same offsets consecutive.
-* Above sorting helps maximally spacing out same offsets on consecutive columns.
-* Columns are sorted by count to minimize pipeline stalls.
-
 ### [table_vector.txt](table_vector.txt)
 
 Transformed and manipulated DVB T2 B7 code table for vector length of 15:
