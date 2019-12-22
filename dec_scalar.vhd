@@ -90,6 +90,10 @@ architecture rtl of dec_scalar is
 	type inp_off_delays is array (1 to 4) of scalar_offset;
 	signal inp_off_d : inp_off_delays;
 
+	signal dhd_reset : boolean := true;
+	signal dhd_read : boolean := false;
+	signal dhd_rden : boolean;
+
 	function inv (val : csft_scalar) return csft_scalar is
 	begin
 		return (not val.sgn, val.mag);
@@ -111,6 +115,13 @@ begin
 			var_wren, var_rden,
 			var_wpos, var_rpos,
 			var_isft, var_osft);
+
+	dhd_rden <= dhd_read and not cnp_busy;
+	dhd_inst : entity work.data_hazard_detection
+		generic map (code_scalars, 64)
+		port map (clock, dhd_reset,
+			var_wren, dhd_rden,
+			var_wpos, var_rpos);
 
 	cnt_inst : entity work.cnt_scalar
 		port map (clock, cnt_wren,
@@ -208,6 +219,7 @@ begin
 			swap_stage(3) <= swap_stage(2);
 			if swap_stage(3) and not swap_stage(2) then
 				inp_stage(0) <= true;
+				dhd_reset <= false;
 --				busy <= false;
 			end if;
 
@@ -319,6 +331,7 @@ begin
 
 			inp_stage(4) <= inp_stage(3);
 			if inp_stage(4) and not cnp_busy then
+				dhd_read <= inp_num_d(4) /= 0 and not inp_wdf_d(2);
 				var_rpos <= off_ooff;
 				bnl_rpos <= inp_loc_d(4);
 				inp_off_d(1) <= off_ooff;
@@ -417,6 +430,7 @@ begin
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
 						not inp_stage(inp_stage'high) and not cnp_busy then
 					busy <= false;
+					dhd_reset <= true;
 				end if;
 			end if;
 		end if;

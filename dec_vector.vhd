@@ -105,6 +105,10 @@ architecture rtl of dec_vector is
 	type inp_shi_delays is array (1 to 6) of vector_shift;
 	signal inp_shi_d : inp_shi_delays;
 
+	signal dhd_reset : boolean := true;
+	signal dhd_read : boolean := false;
+	signal dhd_rden : boolean;
+
 	function inv (val : csft_vector) return csft_vector is
 		variable tmp : csft_vector;
 	begin
@@ -136,6 +140,13 @@ begin
 			var_wren, var_rden,
 			var_wpos, var_rpos,
 			var_isft, var_osft);
+
+	dhd_rden <= dhd_read and not cnp_busy;
+	dhd_inst : entity work.data_hazard_detection
+		generic map (code_scalars, 64)
+		port map (clock, dhd_reset,
+			var_wren, dhd_rden,
+			var_wpos, var_rpos);
 
 	cnt_inst : entity work.cnt_vector
 		port map (clock, cnt_wren,
@@ -265,6 +276,7 @@ begin
 			if swap_stage(3) and not swap_stage(2) then
 				var_wren <= false;
 				inp_stage(0) <= true;
+				dhd_reset <= false;
 --				busy <= false;
 			end if;
 
@@ -332,6 +344,7 @@ begin
 			inp_stage(2) <= inp_stage(1);
 			if inp_stage(2) and not cnp_busy then
 				var_rpos <= loc_ooff;
+				dhd_read <= inp_num_d(2) /= 0;
 				if inp_seq_d(2) = 0 then
 					if inp_num_d(2) = 1 then
 						inp_wdf_d(1) <= false;
@@ -511,6 +524,7 @@ begin
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
 						not inp_stage(inp_stage'high) and not cnp_busy then
 					busy <= false;
+					dhd_reset <= true;
 				end if;
 			end if;
 		end if;
