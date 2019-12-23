@@ -69,7 +69,7 @@ architecture rtl of dec_scalar is
 	signal inp_cnt : count_scalar := degree_max;
 	signal inp_loc : scalar_location;
 	signal inp_blk, inp_blk0 : block_location;
-	type out_stages is array (1 to 3) of boolean;
+	type out_stages is array (0 to 3) of boolean;
 	signal out_stage : out_stages := (others => false);
 	type out_off_delays is array (1 to 2) of scalar_offset;
 	signal out_off_d : out_off_delays;
@@ -125,6 +125,7 @@ begin
 			bnl_wpos, bnl_rpos,
 			bnl_isft, bnl_osft);
 
+	out_stage(0) <= cnp_valid;
 	cnp_inst : entity work.cnp_scalar
 		port map (clock,
 			cnp_start, cnp_count,
@@ -385,7 +386,7 @@ begin
 --			report boolean'image(cnp_valid) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT & boolean'image(cnp_owdf) & HT &
 --				integer'image(vsft_to_soft(cnp_ovsft)) & HT & integer'image(csft_to_soft(cnp_ocsft));
 
-			if cnp_valid then
+			if out_stage(0) then
 				add_ivsft <= cnp_ovsft;
 				add_icsft <= cnp_ocsft;
 				out_wdf_d(1) <= cnp_owdf;
@@ -397,7 +398,7 @@ begin
 				bnl_wren <= false;
 			end if;
 
-			out_stage(1) <= cnp_valid;
+			out_stage(1) <= out_stage(0);
 			if out_stage(1) then
 				out_off_d(2) <= out_off_d(1);
 				out_wdf_d(2) <= out_wdf_d(1);
