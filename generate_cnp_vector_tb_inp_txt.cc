@@ -12,15 +12,15 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 int main()
 {
 	std::random_device rd;
-	std::default_random_engine generator(rd());
+	typedef std::default_random_engine generator;
 	typedef std::uniform_int_distribution<int> uniform;
-	auto count = std::bind(uniform(COUNT_MIN, COUNT_MAX), generator);
-	auto sequence = std::bind(uniform(0, ITERATIONS_MAX-1), generator);
-	auto input = std::bind(uniform(-VMAG_MAX, VMAG_MAX), generator);
-	auto wd_flag = std::bind(uniform(0, 1), generator);
-	auto offset = std::bind(uniform(0, CODE_VECTORS-1), generator);
-	auto shift = std::bind(uniform(0, VECTOR_SCALARS-1), generator);
-	auto location = std::bind(uniform(0, VECTOR_LOCATIONS_MAX-1), generator);
+	auto count = std::bind(uniform(COUNT_MIN, COUNT_MAX), generator(rd()));
+	auto sequence = std::bind(uniform(0, ITERATIONS_MAX-1), generator(rd()));
+	auto input = std::bind(uniform(-VMAG_MAX, VMAG_MAX), generator(rd()));
+	auto wd_flag = std::bind(uniform(0, 1), generator(rd()));
+	auto offset = std::bind(uniform(0, CODE_VECTORS-1), generator(rd()));
+	auto shift = std::bind(uniform(0, VECTOR_SCALARS-1), generator(rd()));
+	auto location = std::bind(uniform(0, VECTOR_LOCATIONS_MAX-1), generator(rd()));
 
 	std::ofstream vector_input("cnp_vector_tb_inp.txt");
 
