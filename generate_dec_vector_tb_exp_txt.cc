@@ -5,8 +5,6 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 */
 
 #include <fstream>
-#include <functional>
-#include <random>
 #include "ldpc_vector.hh"
 
 int offsets[VECTOR_LOCATIONS_MAX];
