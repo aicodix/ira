@@ -18,6 +18,7 @@ entity cnp_vector is
 		oseq : out sequence_scalar;
 		ivsft : in vsft_vector;
 		ovsft : out vsft_vector;
+		icsft : in csft_vector;
 		ocsft : out csft_vector;
 		iwdf : in boolean;
 		owdf : out boolean;
@@ -48,6 +49,8 @@ architecture rtl of cnp_vector is
 	signal buf_addr : natural range 0 to degree_max-1;
 	signal buf_ivsft : vsft_vector;
 	signal buf_ovsft : vsft_vector;
+	signal buf_icsft : csft_vector;
+	signal buf_ocsft : csft_vector;
 	signal buf_icmag : cmag_vector;
 	signal buf_ocmag : cmag_vector;
 	signal buf_iwdf : boolean;
@@ -63,6 +66,7 @@ begin
 		port map (clock,
 			buf_wren, buf_addr,
 			buf_ivsft, buf_ovsft,
+			buf_icsft, buf_ocsft,
 			buf_icmag, buf_ocmag,
 			buf_iwdf, buf_owdf,
 			buf_iloc, buf_oloc,
@@ -71,7 +75,7 @@ begin
 
 	icmag <= min_sum(vmag_of_vsft(ivsft));
 	ovsft <= buf_ovsft;
-	ocsft <= sign_and_cmag_to_csft(opty xor sign_of_vsft(buf_ovsft), select_other(buf_ocmag, omin));
+	ocsft <= self_corr(buf_ocsft, sign_and_cmag_to_csft(opty xor sign_of_vsft(buf_ovsft), select_other(buf_ocmag, omin)));
 	owdf <= buf_owdf;
 	oloc <= buf_oloc;
 	ooff <= buf_ooff;
@@ -132,6 +136,7 @@ begin
 				buf_wren <= true;
 				buf_addr <= num;
 				buf_ivsft <= ivsft;
+				buf_icsft <= icsft;
 				buf_icmag <= icmag;
 				buf_iwdf <= iwdf;
 				buf_iloc <= iloc;

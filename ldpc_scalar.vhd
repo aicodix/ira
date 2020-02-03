@@ -45,11 +45,13 @@ package ldpc_scalar is
 		lo, hi : cmag_scalar;
 	end record;
 	function soft_to_vsft (val : soft_scalar) return vsft_scalar;
+	function soft_to_csft (val : soft_scalar) return csft_scalar;
 	function csft_to_soft (val : csft_scalar) return soft_scalar;
 	function vsft_to_soft (val : vsft_scalar) return soft_scalar;
 	function min_sum (val : vmag_scalar) return cmag_scalar;
 	function select_other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar;
 	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar;
+	function self_corr (prv, nxt : csft_scalar) return csft_scalar;
 end package;
 
 package body ldpc_scalar is
@@ -59,6 +61,18 @@ package body ldpc_scalar is
 		tmp.sgn := val < 0;
 		if abs(val) > vmag_scalar'high then
 			tmp.mag := vmag_scalar'high;
+		else
+			tmp.mag := abs(val);
+		end if;
+		return tmp;
+	end function;
+
+	function soft_to_csft (val : soft_scalar) return csft_scalar is
+		variable tmp : csft_scalar;
+	begin
+		tmp.sgn := val < 0;
+		if abs(val) > cmag_scalar'high then
+			tmp.mag := cmag_scalar'high;
 		else
 			tmp.mag := abs(val);
 		end if;
@@ -115,6 +129,16 @@ package body ldpc_scalar is
 			return (min.lo, mag);
 		else
 			return min;
+		end if;
+	end function;
+
+	function self_corr (prv, nxt : csft_scalar) return csft_scalar is
+		variable tmp : csft_scalar;
+	begin
+		if prv.mag = 0 or prv.sgn = nxt.sgn then
+			return nxt;
+		else
+			return (false, 0);
 		end if;
 	end function;
 end package body;

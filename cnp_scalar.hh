@@ -36,7 +36,11 @@ int mul_scalar(int a, int b)
 {
 	return a * b;
 }
-void cnp_scalar(int *output, const int *input, int cnt, int beta)
+int self_corr(int a, int b)
+{
+	return (a == 0 || (a < 0) == (b < 0)) ? b : 0;
+}
+void cnp_scalar(int *output, const int *input, const int *prev, int cnt, int beta)
 {
 	int imags[cnt];
 	for (int i = 0; i < cnt; ++i)
@@ -53,5 +57,5 @@ void cnp_scalar(int *output, const int *input, int cnt, int beta)
 	CODE::exclusive_reduce(isgns, osgns, cnt, mul_scalar);
 
 	for (int i = 0; i < cnt; ++i)
-		output[i] = osgns[i] * omags[i];
+		output[i] = self_corr(prev[i], osgns[i] * omags[i]);
 }

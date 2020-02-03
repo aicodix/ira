@@ -17,6 +17,7 @@ int main()
 	auto count = std::bind(uniform(COUNT_MIN, COUNT_MAX), generator(rd()));
 	auto sequence = std::bind(uniform(0, ITERATIONS_MAX-1), generator(rd()));
 	auto input = std::bind(uniform(-VMAG_MAX, VMAG_MAX), generator(rd()));
+	auto previous = std::bind(uniform(-CMAG_MAX, CMAG_MAX), generator(rd()));
 	auto wd_flag = std::bind(uniform(0, 1), generator(rd()));
 	auto offset = std::bind(uniform(0, CODE_VECTORS-1), generator(rd()));
 	auto shift = std::bind(uniform(0, VECTOR_SCALARS-1), generator(rd()));
@@ -34,6 +35,8 @@ int main()
 			vector_input << offset() << ':' << shift();
 			for (int k = 0; k < VECTOR_SCALARS; ++k)
 				vector_input << '\t' << input();
+			for (int k = 0; k < VECTOR_SCALARS; ++k)
+				vector_input << '\t' << previous();
 			vector_input << std::endl;
 		}
 	}

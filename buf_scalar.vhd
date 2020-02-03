@@ -13,6 +13,8 @@ entity buf_scalar is
 		addr : in natural range 0 to degree_max-1;
 		ivsft : in vsft_scalar;
 		ovsft : out vsft_scalar;
+		icsft : in csft_scalar;
+		ocsft : out csft_scalar;
 		icmag : in cmag_scalar;
 		ocmag : out cmag_scalar;
 		iwdf : in boolean;
@@ -29,6 +31,8 @@ architecture rtl of buf_scalar is
 	signal wdfs : wdfs_array;
 	type vsft_array is array (0 to degree_max-1) of vsft_scalar;
 	signal vsfts : vsft_array;
+	type csft_array is array (0 to degree_max-1) of csft_scalar;
+	signal csfts : csft_array;
 	type cmag_array is array (0 to degree_max-1) of cmag_scalar;
 	signal cmags : cmag_array;
 	type locs_array is array (0 to degree_max-1) of scalar_location;
@@ -42,12 +46,14 @@ begin
 			if wren then
 				wdfs(addr) <= iwdf;
 				vsfts(addr) <= ivsft;
+				csfts(addr) <= icsft;
 				cmags(addr) <= icmag;
 				locs(addr) <= iloc;
 				offs(addr) <= ioff;
 			end if;
 			owdf <= wdfs(addr);
 			ovsft <= vsfts(addr);
+			ocsft <= csfts(addr);
 			ocmag <= cmags(addr);
 			oloc <= locs(addr);
 			ooff <= offs(addr);

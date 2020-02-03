@@ -14,6 +14,8 @@ entity buf_vector is
 		addr : in natural range 0 to degree_max-1;
 		ivsft : in vsft_vector;
 		ovsft : out vsft_vector;
+		icsft : in csft_vector;
+		ocsft : out csft_vector;
 		icmag : in cmag_vector;
 		ocmag : out cmag_vector;
 		iwdf : in boolean;
@@ -42,6 +44,7 @@ begin
 			generic map (degree_max)
 			port map (clock, wren, addr,
 				ivsft(idx), ovsft(idx),
+				icsft(idx), ocsft(idx),
 				icmag(idx), ocmag(idx));
 	end generate;
 

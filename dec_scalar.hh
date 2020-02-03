@@ -26,7 +26,7 @@ void dec_scalar(int *output, const int *input)
 	for (int i = 0; i < parities; ++i)
 		for (int j = 0; j < BLOCK_SCALARS; ++j)
 			vars[messages+BLOCK_SCALARS*i+j] = min_scalar(max_scalar(input[messages+parities*j+i], -VMAG_MAX), VMAG_MAX);
-	int bnls[SCALAR_LOCATIONS_MAX];
+	int bnls[SCALAR_LOCATIONS_MAX] = { 0 };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
 		int loc = 0, blk = 0;
 		for (int pty = 0; pty < parities; ++pty) {
@@ -39,15 +39,12 @@ void dec_scalar(int *output, const int *input)
 				for (int num = 0; num < cnt; ++num) {
 					wdf[num] = !bs && offsets[blk+num] == CODE_BLOCKS-1 && shifts[blk+num] == BLOCK_SCALARS-1;
 					off[num] = BLOCK_SCALARS * offsets[blk+num] + (shifts[blk+num] + bs) % BLOCK_SCALARS;
-					if (seq)
-						inp[num] = sub_scalar(vars[off[num]], bnl[num]);
-					else
-						inp[num] = vars[off[num]];
+					inp[num] = sub_scalar(vars[off[num]], bnl[num]);
 					if (wdf[num])
 						inp[num] = VMAG_MAX;
 				}
 				int out[COUNT_MAX];
-				cnp_scalar(out, inp, cnt, 1);
+				cnp_scalar(out, inp, bnl, cnt, 1);
 				for (int num = 0; num < cnt; ++num) {
 					bnl[num] = out[num];
 					if (!wdf[num])

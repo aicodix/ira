@@ -46,12 +46,12 @@ Run ```make vector``` to see if the new table is free from data hazards by compa
 
 * Interface for switching or replacing code table
 * Shortening the pipeline if timing analysis allows it
-* Self-Corrected Min-Sum
 * More corner case testing and documentation
 * Can the interface be improved?
 
 ### DONE
 
+* Self-Corrected Min-Sum
 * Scalar and Vector versions
 * Min-Sum or Offset-Min-Sum with fixed beta = 1
 * Pipelined processing

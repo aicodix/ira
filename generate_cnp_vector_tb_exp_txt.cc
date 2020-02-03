@@ -17,6 +17,7 @@ int main()
 		int seq;
 		vector_input >> seq;
 		int inp[COUNT_MAX][VECTOR_SCALARS];
+		int prv[COUNT_MAX][VECTOR_SCALARS];
 		int wdf[COUNT_MAX], loc[COUNT_MAX];
 		int off[COUNT_MAX], shi[COUNT_MAX];
 		for (int j = 0; j < cnt; ++j) {
@@ -30,9 +31,11 @@ int main()
 			vector_input >> shi[j];
 			for (int k = 0; k < VECTOR_SCALARS; ++k)
 				vector_input >> inp[j][k];
+			for (int k = 0; k < VECTOR_SCALARS; ++k)
+				vector_input >> prv[j][k];
 		}
 		int out[COUNT_MAX][VECTOR_SCALARS];
-		cnp_vector(out, inp, cnt, 1);
+		cnp_vector(out, inp, prv, cnt, 1);
 		for (int j = 0; j < cnt; ++j) {
 			vector_output << seq << '\t';
 			vector_output << (wdf[j] ? "TRUE" : "FALSE") << '\t';

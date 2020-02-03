@@ -23,6 +23,7 @@ architecture behavioral of cnp_vector_tb is
 	signal cnp_oseq : sequence_scalar;
 	signal cnp_ivsft : vsft_vector := soft_to_vsft((others => 0));
 	signal cnp_ovsft : vsft_vector;
+	signal cnp_icsft : csft_vector := soft_to_csft((others => 0));
 	signal cnp_ocsft : csft_vector;
 	signal cnp_iwdf : boolean;
 	signal cnp_owdf : boolean;
@@ -39,7 +40,7 @@ begin
 			cnp_busy, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
-			cnp_ocsft,
+			cnp_icsft, cnp_ocsft,
 			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff,
@@ -82,6 +83,7 @@ begin
 		file input : text open read_mode is "cnp_vector_tb_inp.txt";
 		variable buf : line;
 		variable val : soft_vector;
+		variable prv : soft_vector;
 		variable wdf : boolean;
 		variable loc : vector_location;
 		variable off : vector_offset;
@@ -117,6 +119,10 @@ begin
 					read(buf, val(idx));
 				end loop;
 				cnp_ivsft <= soft_to_vsft(val);
+				for idx in prv'range loop
+					read(buf, prv(idx));
+				end loop;
+				cnp_icsft <= soft_to_csft(prv);
 			end if;
 			if num = cnt then
 				if not endfile(input) then

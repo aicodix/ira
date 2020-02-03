@@ -17,6 +17,7 @@ int main()
 	auto count = std::bind(uniform(COUNT_MIN, COUNT_MAX), generator(rd()));
 	auto sequence = std::bind(uniform(0, ITERATIONS_MAX-1), generator(rd()));
 	auto input = std::bind(uniform(-VMAG_MAX, VMAG_MAX), generator(rd()));
+	auto previous = std::bind(uniform(-CMAG_MAX, CMAG_MAX), generator(rd()));
 	auto wd_flag = std::bind(uniform(0, 1), generator(rd()));
 	auto offset = std::bind(uniform(0, CODE_SCALARS-1), generator(rd()));
 	auto location = std::bind(uniform(0, SCALAR_LOCATIONS_MAX-1), generator(rd()));
@@ -32,6 +33,7 @@ int main()
 			scalar_input << '\t' << location();
 			scalar_input << '\t' << offset();
 			scalar_input << '\t' << input();
+			scalar_input << '\t' << previous();
 		}
 		scalar_input << std::endl;
 	}

@@ -22,6 +22,7 @@ architecture behavioral of cnp_scalar_tb is
 	signal cnp_oseq : sequence_scalar;
 	signal cnp_ivsft : vsft_scalar := soft_to_vsft(0);
 	signal cnp_ovsft : vsft_scalar;
+	signal cnp_icsft : csft_scalar := soft_to_csft(0);
 	signal cnp_ocsft : csft_scalar;
 	signal cnp_iwdf : boolean;
 	signal cnp_owdf : boolean;
@@ -36,7 +37,7 @@ begin
 			cnp_busy, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
-			cnp_ocsft,
+			cnp_icsft, cnp_ocsft,
 			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff);
@@ -78,6 +79,7 @@ begin
 		file input : text open read_mode is "cnp_scalar_tb_inp.txt";
 		variable buf : line;
 		variable val : soft_scalar;
+		variable prv : soft_scalar;
 		variable wdf : boolean;
 		variable loc : scalar_location;
 		variable off : scalar_offset;
@@ -106,6 +108,8 @@ begin
 					cnp_ioff <= off;
 					read(buf, val);
 					cnp_ivsft <= soft_to_vsft(val);
+					read(buf, prv);
+					cnp_icsft <= soft_to_csft(prv);
 				end if;
 				if num = cnt then
 					if not endfile(input) then

@@ -49,7 +49,7 @@ void dec_vector(int *output, const int *input)
 			for (int n = 0; n < VECTOR_SCALARS; ++n)
 				vars[messages+BLOCK_VECTORS*i+j][n] = min_scalar(max_scalar(input[K+q*(BLOCK_VECTORS*n+j)+i], -VMAG_MAX), VMAG_MAX);
 	int wd_flags[VECTOR_LOCATIONS_MAX];
-	int bnls[VECTOR_LOCATIONS_MAX][VECTOR_SCALARS];
+	int bnls[VECTOR_LOCATIONS_MAX][VECTOR_SCALARS] = { { 0 } };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
 		int loc = 0;
 		for (int pty = 0; pty < parities; ++pty) {
@@ -73,13 +73,10 @@ void dec_vector(int *output, const int *input)
 					prev_val = tmp[num][0];
 					tmp[num][0] = VMAG_MAX;
 				}
-				if (seq)
-					sub_vector(inp[num], tmp[num], bnl[num]);
-				else
-					cpy_vector(inp[num], tmp[num]);
+				sub_vector(inp[num], tmp[num], bnl[num]);
 			}
 			int out[COUNT_MAX][VECTOR_SCALARS];
-			cnp_vector(out, inp, cnt, 1);
+			cnp_vector(out, inp, bnl, cnt, 1);
 			int first_wdf;
 			for (int num = 0; num < cnt; ++num) {
 				add_vector(tmp[num], inp[num], out[num]);

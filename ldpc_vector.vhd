@@ -29,6 +29,7 @@ package ldpc_vector is
 	type csft_vector is array (0 to vector_scalars-1) of csft_scalar;
 	type two_min_vector is array (0 to vector_scalars-1) of two_min_scalar;
 	function soft_to_vsft (val : soft_vector) return vsft_vector;
+	function soft_to_csft (val : soft_vector) return csft_vector;
 	function csft_to_soft (val : csft_vector) return soft_vector;
 	function vsft_to_soft (val : vsft_vector) return soft_vector;
 	function sign_of_vsft (val : vsft_vector) return sign_vector;
@@ -37,6 +38,7 @@ package ldpc_vector is
 	function min_sum (val : vmag_vector) return cmag_vector;
 	function select_other (mag : cmag_vector; min : two_min_vector) return cmag_vector;
 	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector;
+	function self_corr (prv, nxt : csft_vector) return csft_vector;
 end package;
 
 package body ldpc_vector is
@@ -45,6 +47,15 @@ package body ldpc_vector is
 	begin
 		for idx in tmp'range loop
 			tmp(idx) := soft_to_vsft(val(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function soft_to_csft (val : soft_vector) return csft_vector is
+		variable tmp : csft_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := soft_to_csft(val(idx));
 		end loop;
 		return tmp;
 	end function;
@@ -117,6 +128,15 @@ package body ldpc_vector is
 	begin
 		for idx in cmag_vector'range loop
 			tmp(idx) := two_min(mag(idx), min(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function self_corr (prv, nxt : csft_vector) return csft_vector is
+		variable tmp : csft_vector;
+	begin
+		for idx in csft_vector'range loop
+			tmp(idx) := self_corr(prv(idx), nxt(idx));
 		end loop;
 		return tmp;
 	end function;

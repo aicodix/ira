@@ -20,6 +20,7 @@ int main()
 		int loc[COUNT_MAX];
 		int off[COUNT_MAX];
 		int inp[COUNT_MAX];
+		int prv[COUNT_MAX];
 		for (int j = 0; j < cnt; ++j) {
 			char chr;
 			scalar_input >> chr;
@@ -28,9 +29,10 @@ int main()
 			scalar_input >> loc[j];
 			scalar_input >> off[j];
 			scalar_input >> inp[j];
+			scalar_input >> prv[j];
 		}
 		int out[COUNT_MAX];
-		cnp_scalar(out, inp, cnt, 1);
+		cnp_scalar(out, inp, prv, cnt, 1);
 		scalar_output << seq;
 		for (int j = 0; j < cnt; ++j) {
 			scalar_output << '\t' << (wdf[j] ? "TRUE" : "FALSE");

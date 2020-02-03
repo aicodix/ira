@@ -39,7 +39,7 @@ architecture rtl of dec_scalar is
 	signal cnp_busy, cnp_valid : boolean;
 	signal cnp_iseq, cnp_oseq : sequence_scalar;
 	signal cnp_ivsft, cnp_ovsft : vsft_scalar;
-	signal cnp_ocsft : csft_scalar;
+	signal cnp_icsft, cnp_ocsft : csft_scalar;
 	signal cnp_iwdf, cnp_owdf : boolean;
 	signal cnp_iloc, cnp_oloc : scalar_location;
 	signal cnp_ioff, cnp_ooff : scalar_offset;
@@ -89,6 +89,8 @@ architecture rtl of dec_scalar is
 	signal inp_wdf_d : inp_wdf_delays;
 	type inp_off_delays is array (1 to 4) of scalar_offset;
 	signal inp_off_d : inp_off_delays;
+	type inp_bnl_delays is array (1 to 2) of csft_scalar;
+	signal inp_bnl_d : inp_bnl_delays;
 
 	function inv (val : csft_scalar) return csft_scalar is
 	begin
@@ -132,7 +134,7 @@ begin
 			cnp_busy, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
-			cnp_ocsft,
+			cnp_icsft, cnp_ocsft,
 			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff);
@@ -344,8 +346,10 @@ begin
 				sub_ivsft <= var_osft;
 				if inp_seq_d(6) = 0 then
 					sub_icsft <= (false, 0);
+					inp_bnl_d(1) <= (false, 0);
 				else
 					sub_icsft <= bnl_osft;
+					inp_bnl_d(1) <= bnl_osft;
 				end if;
 				inp_num_d(7) <= inp_num_d(6);
 				inp_cnt_d(7) <= inp_cnt_d(6);
@@ -363,12 +367,14 @@ begin
 				inp_loc_d(8) <= inp_loc_d(7);
 				inp_wdf_d(6) <= inp_wdf_d(5);
 				inp_off_d(4) <= inp_off_d(3);
+				inp_bnl_d(2) <= inp_bnl_d(1);
 			end if;
 
 			inp_stage(8) <= inp_stage(7);
 			if inp_stage(8) and not cnp_busy then
 				cnp_start <= inp_num_d(8) = 0;
 				cnp_count <= inp_cnt_d(8);
+				cnp_icsft <= inp_bnl_d(2);
 				if inp_wdf_d(6) then
 					cnp_ivsft <= (false, vmag_scalar'high);
 				else

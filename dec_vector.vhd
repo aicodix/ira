@@ -49,7 +49,7 @@ architecture rtl of dec_vector is
 	signal cnp_busy, cnp_valid : boolean;
 	signal cnp_iseq, cnp_oseq : sequence_scalar;
 	signal cnp_ivsft, cnp_ovsft : vsft_vector;
-	signal cnp_ocsft : csft_vector;
+	signal cnp_icsft, cnp_ocsft : csft_vector;
 	signal cnp_iwdf, cnp_owdf : boolean;
 	signal cnp_iloc, cnp_oloc : vector_location;
 	signal cnp_ioff, cnp_ooff : vector_offset;
@@ -104,6 +104,8 @@ architecture rtl of dec_vector is
 	signal inp_off_d : inp_off_delays;
 	type inp_shi_delays is array (1 to 6) of vector_shift;
 	signal inp_shi_d : inp_shi_delays;
+	type inp_bnl_delays is array (1 to 2) of csft_vector;
+	signal inp_bnl_d : inp_bnl_delays;
 
 	function inv (val : csft_vector) return csft_vector is
 		variable tmp : csft_vector;
@@ -157,7 +159,7 @@ begin
 			cnp_busy, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
-			cnp_ocsft,
+			cnp_icsft, cnp_ocsft,
 			cnp_iwdf, cnp_owdf,
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff,
@@ -414,8 +416,10 @@ begin
 				end if;
 				if inp_seq_d(6) = 0 then
 					sub_icsft <= (others => (false, 0));
+					inp_bnl_d(1) <= (others => (false, 0));
 				else
 					sub_icsft <= bnl_osft;
+					inp_bnl_d(1) <= bnl_osft;
 				end if;
 				inp_num_d(7) <= inp_num_d(6);
 				inp_cnt_d(7) <= inp_cnt_d(6);
@@ -435,6 +439,7 @@ begin
 				inp_wdf_d(6) <= inp_wdf_d(5);
 				inp_off_d(6) <= inp_off_d(5);
 				inp_shi_d(6) <= inp_shi_d(5);
+				inp_bnl_d(2) <= inp_bnl_d(1);
 			end if;
 
 			inp_stage(8) <= inp_stage(7);
@@ -442,6 +447,7 @@ begin
 				cnp_start <= inp_num_d(8) = 0;
 				cnp_count <= inp_cnt_d(8);
 				cnp_ivsft <= sub_ovsft;
+				cnp_icsft <= inp_bnl_d(2);
 				cnp_iseq <= inp_seq_d(8);
 				cnp_iloc <= inp_loc_d(8);
 				cnp_iwdf <= inp_wdf_d(6);
