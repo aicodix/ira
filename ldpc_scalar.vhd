@@ -8,18 +8,18 @@ use ieee.numeric_std.all;
 
 package ldpc_scalar is
 	constant iterations_max : positive := 25;
-	constant code_scalars : positive := 16200;
+	constant code_scalars : positive := 64800;
 	constant block_scalars : positive := 360;
 	constant code_blocks : positive := code_scalars / block_scalars;
 	constant degree_max : positive := 27;
-	constant total_links_max : positive := 75239;
+	constant total_links_max : positive := 233999;
 	constant soft_bits : positive := 8;
 	constant vsft_bits : positive := 8;
 	constant csft_bits : positive := 6;
 	constant scalar_locations_max : positive := total_links_max+1;
 	constant block_locations_max : positive := (total_links_max+1) / block_scalars;
 	constant scalar_parities_min : positive := code_scalars / 9;
-	constant scalar_parities_max : positive := (code_scalars * 4) / 5;
+	constant scalar_parities_max : positive := (code_scalars * 3) / 4;
 	constant block_parities_min : positive := scalar_parities_min / block_scalars;
 	constant block_parities_max : positive := scalar_parities_max / block_scalars;
 	constant scalar_messages_min : positive := code_scalars - scalar_parities_max;
