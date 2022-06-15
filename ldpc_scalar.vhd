@@ -13,9 +13,9 @@ package ldpc_scalar is
 	constant code_blocks : positive := code_scalars / block_scalars;
 	constant degree_max : positive := 27;
 	constant total_links_max : positive := 233999;
-	constant soft_bits : positive := 8;
-	constant vsft_bits : positive := 8;
-	constant csft_bits : positive := 6;
+	constant soft_bits : positive := 5;
+	constant vsft_bits : positive := 5;
+	constant csft_bits : positive := 4;
 	constant scalar_locations_max : positive := total_links_max+1;
 	constant block_locations_max : positive := (total_links_max+1) / block_scalars;
 	constant scalar_parities_min : positive := code_scalars / 9;

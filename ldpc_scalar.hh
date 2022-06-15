@@ -7,9 +7,9 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #pragma once
 
 const int ITERATIONS_MAX = 25;
-const int SOFT_BITS = 8;
-const int VSFT_BITS = 8;
-const int CSFT_BITS = 6;
+const int SOFT_BITS = 5;
+const int VSFT_BITS = 5;
+const int CSFT_BITS = 4;
 const int COUNT_MIN = 2;
 const int COUNT_MAX = 27;
 const int BLOCK_SCALARS = 360;
