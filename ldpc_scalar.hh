@@ -7,6 +7,8 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 #pragma once
 
 const int ITERATIONS_MAX = 25;
+const int SOFT_MIN = -128;
+const int SOFT_MAX = 127;
 const int VMAG_MAX = 127;
 const int CMAG_MAX = 31;
 const int COUNT_MIN = 2;
