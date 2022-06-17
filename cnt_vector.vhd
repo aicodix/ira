@@ -11,10 +11,7 @@ use work.table_vector.all;
 entity cnt_vector is
 	port (
 		clock : in std_logic;
-		wren : in boolean;
-		wpos : in natural range 0 to vector_parities_max-1;
 		rpos : in natural range 0 to vector_parities_max-1;
-		icnt : in count_scalar;
 		ocnt : out count_scalar
 	);
 end cnt_vector;
@@ -25,9 +22,6 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if wren then
-				cnts(wpos) <= icnt;
-			end if;
 			ocnt <= cnts(rpos);
 		end if;
 	end process;

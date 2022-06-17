@@ -27,13 +27,12 @@ architecture rtl of dec_scalar is
 	signal bnl_wren, bnl_rden : boolean := false;
 	signal bnl_wpos, bnl_rpos : scalar_location;
 	signal bnl_isft, bnl_osft : csft_scalar;
-	signal loc_wren, loc_rden : boolean := false;
-	signal loc_wpos, loc_rpos : block_location;
-	signal loc_ioff, loc_ooff : block_offset;
-	signal loc_ishi, loc_oshi : block_shift;
-	signal cnt_wren : boolean := false;
-	signal cnt_wpos, cnt_rpos : natural range 0 to block_parities_max-1;
-	signal cnt_icnt, cnt_ocnt : count_scalar;
+	signal loc_rden : boolean := false;
+	signal loc_rpos : block_location;
+	signal loc_ooff : block_offset;
+	signal loc_oshi : block_shift;
+	signal cnt_rpos : natural range 0 to block_parities_max-1;
+	signal cnt_ocnt : count_scalar;
 	signal cnp_start : boolean := false;
 	signal cnp_count : count_scalar;
 	signal cnp_busy, cnp_valid : boolean;
@@ -101,10 +100,8 @@ begin
 	loc_rden <= not cnp_busy;
 	loc_inst : entity work.loc_scalar
 		port map (clock,
-			loc_wren, loc_rden,
-			loc_wpos, loc_rpos,
-			loc_ioff, loc_ooff,
-			loc_ishi, loc_oshi);
+			loc_rden, loc_rpos,
+			loc_ooff, loc_oshi);
 
 	var_rden <= not cnp_busy;
 	var_inst : entity work.var_scalar
@@ -115,9 +112,8 @@ begin
 			var_isft, var_osft);
 
 	cnt_inst : entity work.cnt_scalar
-		port map (clock, cnt_wren,
-			cnt_wpos, cnt_rpos,
-			cnt_icnt, cnt_ocnt);
+		port map (clock,
+			cnt_rpos, cnt_ocnt);
 
 	bnl_rden <= not cnp_busy;
 	bnl_inst : entity work.bnl_scalar

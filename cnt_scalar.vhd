@@ -10,10 +10,7 @@ use work.table_scalar.all;
 entity cnt_scalar is
 	port (
 		clock : in std_logic;
-		wren : in boolean;
-		wpos : in natural range 0 to block_parities_max-1;
 		rpos : in natural range 0 to block_parities_max-1;
-		icnt : in count_scalar;
 		ocnt : out count_scalar
 	);
 end cnt_scalar;
@@ -24,9 +21,6 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if wren then
-				cnts(wpos) <= icnt;
-			end if;
 			ocnt <= cnts(rpos);
 		end if;
 	end process;

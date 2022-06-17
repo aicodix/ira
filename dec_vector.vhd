@@ -37,13 +37,12 @@ architecture rtl of dec_vector is
 	signal wdf_wren, wdf_rden : boolean := false;
 	signal wdf_wpos, wdf_rpos : vector_location;
 	signal wdf_iwdf, wdf_owdf : boolean;
-	signal loc_wren, loc_rden : boolean := false;
-	signal loc_wpos, loc_rpos : vector_location;
-	signal loc_ioff, loc_ooff : vector_offset;
-	signal loc_ishi, loc_oshi : vector_shift;
-	signal cnt_wren : boolean := false;
-	signal cnt_wpos, cnt_rpos : natural range 0 to vector_parities_max-1;
-	signal cnt_icnt, cnt_ocnt : count_scalar;
+	signal loc_rden : boolean := false;
+	signal loc_rpos : vector_location;
+	signal loc_ooff : vector_offset;
+	signal loc_oshi : vector_shift;
+	signal cnt_rpos : natural range 0 to vector_parities_max-1;
+	signal cnt_ocnt : count_scalar;
 	signal cnp_start : boolean := false;
 	signal cnp_count : count_scalar;
 	signal cnp_busy, cnp_valid : boolean;
@@ -119,10 +118,8 @@ begin
 	loc_rden <= not cnp_busy;
 	loc_inst : entity work.loc_vector
 		port map (clock,
-			loc_wren, loc_rden,
-			loc_wpos, loc_rpos,
-			loc_ioff, loc_ooff,
-			loc_ishi, loc_oshi);
+			loc_rden, loc_rpos,
+			loc_ooff, loc_oshi);
 
 	wdf_rden <= not cnp_busy;
 	wdf_inst : entity work.wdf_vector
@@ -140,9 +137,8 @@ begin
 			var_isft, var_osft);
 
 	cnt_inst : entity work.cnt_vector
-		port map (clock, cnt_wren,
-			cnt_wpos, cnt_rpos,
-			cnt_icnt, cnt_ocnt);
+		port map (clock,
+			cnt_rpos, cnt_ocnt);
 
 	bnl_rden <= not cnp_busy;
 	bnl_inst : entity work.bnl_vector

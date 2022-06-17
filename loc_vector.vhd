@@ -10,13 +10,9 @@ use work.table_vector.all;
 entity loc_vector is
 	port (
 		clock : in std_logic;
-		wren : in boolean;
 		rden : in boolean;
-		wpos : in vector_location;
 		rpos : in vector_location;
-		ioff : in vector_offset;
 		ooff : out vector_offset;
-		ishi : in vector_shift;
 		oshi : out vector_shift
 	);
 end loc_vector;
@@ -28,10 +24,6 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if wren then
-				offs(wpos) <= ioff;
-				shis(wpos) <= ishi;
-			end if;
 			if rden then
 				ooff <= offs(rpos);
 				oshi <= shis(rpos);
