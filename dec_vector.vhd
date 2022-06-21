@@ -27,8 +27,8 @@ architecture rtl of dec_vector is
 	type swap_vs_delays is array (1 to 2) of vector_index;
 	signal swap_vs_d : swap_vs_delays;
 	signal prev_vsft : vsft_scalar;
-	signal var_wren, var_rden : boolean := false;
-	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
+	signal var_wren, var_rden : bool_vector := (others => false);
+	signal var_wpos, var_rpos : vpos_vector;
 	signal var_isft, var_osft : vsft_vector;
 	signal bnl_wren, bnl_rden : boolean := false;
 	signal bnl_wpos, bnl_rpos : vector_location;
@@ -128,9 +128,8 @@ begin
 			wdf_wpos, wdf_rpos,
 			wdf_iwdf, wdf_owdf);
 
-	var_rden <= not cnp_busy;
+	var_rden <= (others => not cnp_busy);
 	var_inst : entity work.var_vector
-		generic map (code_vectors)
 		port map (clock,
 			var_wren, var_rden,
 			var_wpos, var_rpos,
@@ -234,7 +233,7 @@ begin
 				swap_start_d(2) <= swap_start_d(1);
 				swap_soft_d(1) <= isoft;
 				swap_pos <= swap_cv + swap_bv;
-				var_rpos <= swap_cv + swap_bv;
+				var_rpos <= (others => swap_cv + swap_bv);
 			end if;
 
 			swap_stage(1) <= swap_stage(0);
@@ -248,8 +247,8 @@ begin
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
 				osoft <= vsft_to_soft(var_osft(swap_vs_d(2)));
-				var_wren <= true;
-				var_wpos <= swap_dpos;
+				var_wren <= (others => true);
+				var_wpos <= (others => swap_dpos);
 				for idx in soft_vector'range loop
 					if swap_vs_d(2) = idx then
 						var_isft(idx) <= soft_to_vsft(swap_soft_d(2));
@@ -261,7 +260,7 @@ begin
 
 			swap_stage(3) <= swap_stage(2);
 			if swap_stage(3) and not swap_stage(2) then
-				var_wren <= false;
+				var_wren <= (others => false);
 				inp_stage(0) <= true;
 --				busy <= false;
 			end if;
@@ -329,7 +328,7 @@ begin
 
 			inp_stage(2) <= inp_stage(1);
 			if inp_stage(2) and not cnp_busy then
-				var_rpos <= loc_ooff;
+				var_rpos <= (others => loc_ooff);
 				if inp_seq_d(2) = 0 then
 					if inp_num_d(2) = 1 then
 						inp_wdf_d(1) <= false;
@@ -503,13 +502,13 @@ begin
 			out_stage(4) <= out_stage(3);
 			if out_stage(4) then
 				var_isft <= ror_ovsft;
-				var_wpos <= out_off_d(4);
-				var_wren <= not out_wdf_d(4);
+				var_wpos <= (others => out_off_d(4));
+				var_wren <= (others => not out_wdf_d(4));
 			end if;
 
 			out_stage(5) <= out_stage(4);
 			if out_stage(5) and not out_stage(4) then
-				var_wren <= false;
+				var_wren <= (others => false);
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
 						not inp_stage(inp_stage'high) and not cnp_busy then
 					busy <= false;

@@ -21,7 +21,9 @@ package ldpc_vector is
 	type vector_counts is array (0 to vector_parities_max-1) of count_scalar;
 	type vector_offsets is array (0 to vector_locations_max-1) of vector_offset;
 	type vector_shifts is array (0 to vector_locations_max-1) of vector_shift;
+	type vpos_vector is array (0 to vector_scalars-1) of vector_offset;
 	type soft_vector is array (0 to vector_scalars-1) of soft_scalar;
+	type bool_vector is array (0 to vector_scalars-1) of boolean;
 	type sign_vector is array (0 to vector_scalars-1) of boolean;
 	type cmag_vector is array (0 to vector_scalars-1) of cmag_scalar;
 	type vmag_vector is array (0 to vector_scalars-1) of vmag_scalar;
