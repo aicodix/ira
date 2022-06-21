@@ -24,7 +24,7 @@ architecture rtl of dec_vector is
 	signal swap_vs : natural range 0 to vector_scalars := vector_scalars;
 	signal swap_bv : natural range 0 to block_vectors-1;
 	subtype vector_index is natural range 0 to vector_scalars-1;
-	type swap_vs_delays is array (1 to 2) of vector_index;
+	type swap_vs_delays is array (1 to 3) of vector_index;
 	signal swap_vs_d : swap_vs_delays;
 	signal prev_vsft : vsft_scalar;
 	signal var_wren, var_rden : bool_vector := (others => false);
@@ -233,7 +233,11 @@ begin
 				swap_start_d(2) <= swap_start_d(1);
 				swap_soft_d(1) <= isoft;
 				swap_pos <= swap_cv + swap_bv;
-				var_rpos <= (others => swap_cv + swap_bv);
+				for idx in soft_vector'range loop
+					if swap_vs = idx then
+						var_rpos(idx) <= swap_cv + swap_bv;
+					end if;
+				end loop;
 			end if;
 
 			swap_stage(1) <= swap_stage(0);
@@ -246,21 +250,24 @@ begin
 
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
+				swap_vs_d(3) <= swap_vs_d(2);
 				osoft <= vsft_to_soft(var_osft(swap_vs_d(2)));
-				var_wren <= (others => true);
-				var_wpos <= (others => swap_dpos);
 				for idx in soft_vector'range loop
 					if swap_vs_d(2) = idx then
+						var_wren(idx) <= true;
+						var_wpos(idx) <= swap_dpos;
 						var_isft(idx) <= soft_to_vsft(swap_soft_d(2));
-					else
-						var_isft(idx) <= var_osft(idx);
 					end if;
 				end loop;
 			end if;
 
 			swap_stage(3) <= swap_stage(2);
 			if swap_stage(3) and not swap_stage(2) then
-				var_wren <= (others => false);
+				for idx in soft_vector'range loop
+					if swap_vs_d(3) = idx then
+						var_wren(idx) <= false;
+					end if;
+				end loop;
 				inp_stage(0) <= true;
 --				busy <= false;
 			end if;
