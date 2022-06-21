@@ -22,7 +22,7 @@ package ldpc_vector is
 	type vector_offsets is array (0 to vector_locations_max-1) of vector_offset;
 	type vector_shifts is array (0 to vector_locations_max-1) of vector_shift;
 	type soft_vector is array (0 to vector_scalars-1) of soft_scalar;
-	type sign_vector is array (0 to vector_scalars-1) of boolean;
+	type bool_vector is array (0 to vector_scalars-1) of boolean;
 	type cmag_vector is array (0 to vector_scalars-1) of cmag_scalar;
 	type vmag_vector is array (0 to vector_scalars-1) of vmag_scalar;
 	type vsft_vector is array (0 to vector_scalars-1) of vsft_scalar;
@@ -32,9 +32,9 @@ package ldpc_vector is
 	function soft_to_csft (val : soft_vector) return csft_vector;
 	function csft_to_soft (val : csft_vector) return soft_vector;
 	function vsft_to_soft (val : vsft_vector) return soft_vector;
-	function sign_of_vsft (val : vsft_vector) return sign_vector;
+	function sign_of_vsft (val : vsft_vector) return bool_vector;
 	function vmag_of_vsft (val : vsft_vector) return vmag_vector;
-	function sign_and_cmag_to_csft (sgn : sign_vector; mag : cmag_vector) return csft_vector;
+	function sign_and_cmag_to_csft (sgn : bool_vector; mag : cmag_vector) return csft_vector;
 	function min_sum (val : vmag_vector) return cmag_vector;
 	function select_other (mag : cmag_vector; min : two_min_vector) return cmag_vector;
 	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector;
@@ -78,8 +78,8 @@ package body ldpc_vector is
 		return tmp;
 	end function;
 
-	function sign_of_vsft (val : vsft_vector) return sign_vector is
-		variable tmp : sign_vector;
+	function sign_of_vsft (val : vsft_vector) return bool_vector is
+		variable tmp : bool_vector;
 	begin
 		for idx in tmp'range loop
 			tmp(idx) := val(idx).sgn;
@@ -96,7 +96,7 @@ package body ldpc_vector is
 		return tmp;
 	end function;
 
-	function sign_and_cmag_to_csft (sgn : sign_vector; mag : cmag_vector) return csft_vector is
+	function sign_and_cmag_to_csft (sgn : bool_vector; mag : cmag_vector) return csft_vector is
 		variable tmp : csft_vector;
 	begin
 		for idx in tmp'range loop
