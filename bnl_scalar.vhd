@@ -22,17 +22,17 @@ entity bnl_scalar is
 end bnl_scalar;
 
 architecture rtl of bnl_scalar is
-	type csft_array is array (0 to size-1) of csft_scalar;
-	signal sfts : csft_array;
+	type csft_array is array (0 to size-1) of csft_scalar_logic;
+	signal sfts : csft_array := (others => (others => '0'));
 begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if wren then
-				sfts(wpos) <= isft;
+				sfts(wpos) <= csft_to_logic(isft);
 			end if;
 			if rden then
-				osft <= sfts(rpos);
+				osft <= logic_to_csft(sfts(rpos));
 			end if;
 		end if;
 	end process;

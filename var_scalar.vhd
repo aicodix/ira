@@ -22,17 +22,17 @@ entity var_scalar is
 end var_scalar;
 
 architecture rtl of var_scalar is
-	type vsft_array is array (0 to size-1) of vsft_scalar;
-	signal sfts : vsft_array;
+	type vsft_array is array (0 to size-1) of vsft_scalar_logic;
+	signal sfts : vsft_array := (others => (others => '0'));
 begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
 			if wren then
-				sfts(wpos) <= isft;
+				sfts(wpos) <= vsft_to_logic(isft);
 			end if;
 			if rden then
-				osft <= sfts(rpos);
+				osft <= logic_to_vsft(sfts(rpos));
 			end if;
 		end if;
 	end process;

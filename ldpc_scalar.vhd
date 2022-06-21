@@ -2,6 +2,10 @@
 --
 -- Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 package ldpc_scalar is
 	constant iterations_max : positive := 25;
 	constant code_scalars : positive := 16200;
@@ -27,9 +31,13 @@ package ldpc_scalar is
 	subtype scalar_messages is positive range scalar_messages_min to scalar_messages_max;
 	subtype soft_scalar is integer range -128 to 127;
 	subtype cmag_scalar is natural range 0 to 31;
+	subtype cmag_scalar_logic is std_logic_vector (4 downto 0);
 	subtype vmag_scalar is natural range 0 to 127;
+	subtype vmag_scalar_logic is std_logic_vector (7 downto 0);
 	subtype count_scalar is positive range 2 to degree_max;
 	subtype sequence_scalar is natural range 0 to iterations_max-1;
+	subtype csft_scalar_logic is std_logic_vector (cmag_scalar_logic'length downto 0);
+	subtype vsft_scalar_logic is std_logic_vector (vmag_scalar_logic'length downto 0);
 	type block_counts is array (0 to block_parities_max-1) of count_scalar;
 	type block_offsets is array (0 to block_locations_max-1) of block_offset;
 	type block_shifts is array (0 to block_locations_max-1) of block_shift;
@@ -52,6 +60,12 @@ package ldpc_scalar is
 	function select_other (mag : cmag_scalar; min : two_min_scalar) return cmag_scalar;
 	function two_min (mag : cmag_scalar; min : two_min_scalar) return two_min_scalar;
 	function self_corr (prv, nxt : csft_scalar) return csft_scalar;
+	function bool_to_logic (val : boolean) return std_logic;
+	function logic_to_bool (val : std_logic) return boolean;
+	function logic_to_csft (val : csft_scalar_logic) return csft_scalar;
+	function csft_to_logic (val : csft_scalar) return csft_scalar_logic;
+	function logic_to_vsft (val : vsft_scalar_logic) return vsft_scalar;
+	function vsft_to_logic (val : vsft_scalar) return vsft_scalar_logic;
 end package;
 
 package body ldpc_scalar is
@@ -140,6 +154,40 @@ package body ldpc_scalar is
 		else
 			return (false, 0);
 		end if;
+	end function;
+
+	function bool_to_logic (val : boolean) return std_logic is
+	begin
+		if val then
+			return '1';
+		else
+			return '0';
+		end if;
+	end function;
+
+	function logic_to_bool (val : std_logic) return boolean is
+	begin
+		return val = '1';
+	end function;
+
+	function logic_to_csft (val : csft_scalar_logic) return csft_scalar is
+	begin
+		return (logic_to_bool(val(val'high)), to_integer(unsigned(val(cmag_scalar_logic'high downto 0))));
+	end function;
+
+	function csft_to_logic (val : csft_scalar) return csft_scalar_logic is
+	begin
+		return bool_to_logic(val.sgn) & std_logic_vector(to_unsigned(val.mag, cmag_scalar_logic'length));
+	end function;
+
+	function logic_to_vsft (val : vsft_scalar_logic) return vsft_scalar is
+	begin
+		return (logic_to_bool(val(val'high)), to_integer(unsigned(val(vmag_scalar_logic'high downto 0))));
+	end function;
+
+	function vsft_to_logic (val : vsft_scalar) return vsft_scalar_logic is
+	begin
+		return bool_to_logic(val.sgn) & std_logic_vector(to_unsigned(val.mag, vmag_scalar_logic'length));
 	end function;
 end package body;
 
