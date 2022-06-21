@@ -13,6 +13,9 @@ package ldpc_scalar is
 	constant code_blocks : positive := code_scalars / block_scalars;
 	constant degree_max : positive := 27;
 	constant total_links_max : positive := 75239;
+	constant soft_bits : positive := 8;
+	constant vsft_bits : positive := 8;
+	constant csft_bits : positive := 6;
 	constant scalar_locations_max : positive := total_links_max+1;
 	constant block_locations_max : positive := (total_links_max+1) / block_scalars;
 	constant scalar_parities_min : positive := code_scalars / 9;
@@ -29,11 +32,11 @@ package ldpc_scalar is
 	subtype scalar_parities is positive range scalar_parities_min to scalar_parities_max;
 	subtype block_parities is positive range block_parities_min to block_parities_max;
 	subtype scalar_messages is positive range scalar_messages_min to scalar_messages_max;
-	subtype soft_scalar is integer range -128 to 127;
-	subtype cmag_scalar is natural range 0 to 31;
-	subtype cmag_scalar_logic is std_logic_vector (4 downto 0);
-	subtype vmag_scalar is natural range 0 to 127;
-	subtype vmag_scalar_logic is std_logic_vector (7 downto 0);
+	subtype soft_scalar is integer range - (2 ** (soft_bits-1)) to (2 ** (soft_bits-1)) - 1;
+	subtype cmag_scalar is natural range 0 to (2 ** (csft_bits-1)) - 1;
+	subtype cmag_scalar_logic is std_logic_vector (csft_bits-1 downto 0);
+	subtype vmag_scalar is natural range 0 to (2 ** (vsft_bits-1)) - 1;
+	subtype vmag_scalar_logic is std_logic_vector (vsft_bits-1 downto 0);
 	subtype count_scalar is positive range 2 to degree_max;
 	subtype sequence_scalar is natural range 0 to iterations_max-1;
 	subtype csft_scalar_logic is std_logic_vector (cmag_scalar_logic'length downto 0);
