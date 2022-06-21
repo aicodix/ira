@@ -33,7 +33,7 @@ end cnp_vector;
 
 architecture rtl of cnp_vector is
 	signal imin, dmin, omin : two_min_vector;
-	signal ipty, dpty, opty : sign_vector;
+	signal ipty, dpty, opty : bool_vector;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal num : num_scalar := num_scalar'high;
 	signal icmag : cmag_vector;
