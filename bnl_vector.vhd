@@ -4,6 +4,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.ldpc_scalar.all;
 use work.ldpc_vector.all;
 
 entity bnl_vector is
@@ -22,19 +24,22 @@ entity bnl_vector is
 end bnl_vector;
 
 architecture rtl of bnl_vector is
-	type csft_array is array (0 to size-1) of csft_vector_logic;
-	signal sfts : csft_array := (others => (others => '0'));
+	constant addr_width : positive := depth_to_width(size);
+	constant data_width : positive := csft_vector_logic'length;
+	signal waddr : std_logic_vector(addr_width-1 downto 0);
+	signal raddr : std_logic_vector(addr_width-1 downto 0);
+	signal odata : csft_vector_logic;
+	signal idata : csft_vector_logic;
 begin
-	process (clock)
-	begin
-		if rising_edge(clock) then
-			if wren then
-				sfts(wpos) <= csft_to_logic(isft);
-			end if;
-			if rden then
-				osft <= logic_to_csft(sfts(rpos));
-			end if;
-		end if;
-	end process;
+	ram_inst : entity work.sdp_ram
+		generic map (size, addr_width, data_width)
+		port map (clock,
+			bool_to_logic(wren), bool_to_logic(rden),
+			waddr, raddr, idata, odata);
+
+	waddr <= std_logic_vector(to_unsigned(wpos, addr_width));
+	raddr <= std_logic_vector(to_unsigned(rpos, addr_width));
+	idata <= csft_to_logic(isft);
+	osft <= logic_to_csft(odata);
 end rtl;
 
