@@ -4,6 +4,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.ldpc_scalar.all;
 use work.ldpc_vector.all;
 
 entity var_vector is
@@ -22,12 +24,22 @@ entity var_vector is
 end var_vector;
 
 architecture rtl of var_vector is
+	constant addr_width : positive := depth_to_width(size);
+	constant data_width : positive := vsft_vector_logic'length;
+	signal waddr : std_logic_vector(addr_width-1 downto 0);
+	signal raddr : std_logic_vector(addr_width-1 downto 0);
+	signal odata : vsft_vector_logic;
+	signal idata : vsft_vector_logic;
 begin
-	vector_inst : for idx in soft_vector'range generate
-		scalar_inst : entity work.var_scalar
-			generic map (size)
-			port map (clock, wren, rden, wpos, rpos,
-				isft(idx), osft(idx));
-	end generate;
+	ram_inst : entity work.sdp_ram
+		generic map (size, addr_width, data_width)
+		port map (clock,
+			bool_to_logic(wren), bool_to_logic(rden),
+			waddr, raddr, idata, odata);
+
+	waddr <= std_logic_vector(to_unsigned(wpos, addr_width));
+	raddr <= std_logic_vector(to_unsigned(rpos, addr_width));
+	idata <= vsft_to_logic(isft);
+	osft <= logic_to_vsft(odata);
 end rtl;
 
