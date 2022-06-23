@@ -2,6 +2,8 @@
 --
 -- Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
+library ieee;
+use ieee.std_logic_1164.all;
 use work.ldpc_scalar.all;
 
 package ldpc_vector is
@@ -18,6 +20,8 @@ package ldpc_vector is
 	subtype vector_shift is natural range 0 to vector_scalars-1;
 	subtype vector_parities is positive range vector_parities_min to vector_parities_max;
 	subtype vector_messages is positive range vector_messages_min to vector_messages_max;
+	subtype csft_vector_logic is std_logic_vector (vector_scalars * csft_scalar_logic'length - 1 downto 0);
+	subtype vsft_vector_logic is std_logic_vector (vector_scalars * vsft_scalar_logic'length - 1 downto 0);
 	type vector_counts is array (0 to vector_parities_max-1) of count_scalar;
 	type vector_offsets is array (0 to vector_locations_max-1) of vector_offset;
 	type vector_shifts is array (0 to vector_locations_max-1) of vector_shift;
@@ -40,6 +44,10 @@ package ldpc_vector is
 	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector;
 	function self_corr (prv, nxt : csft_vector) return csft_vector;
 	function index_to_mask (enable : boolean; index : vector_shift) return bool_vector;
+	function logic_to_csft (val : csft_vector_logic) return csft_vector;
+	function csft_to_logic (val : csft_vector) return csft_vector_logic;
+	function logic_to_vsft (val : vsft_vector_logic) return vsft_vector;
+	function vsft_to_logic (val : vsft_vector) return vsft_vector_logic;
 end package;
 
 package body ldpc_vector is
@@ -147,6 +155,42 @@ package body ldpc_vector is
 	begin
 		for idx in tmp'range loop
 			tmp(idx) := enable and idx = index;
+		end loop;
+		return tmp;
+	end function;
+
+	function logic_to_csft (val : csft_vector_logic) return csft_vector is
+		variable tmp : csft_vector;
+	begin
+		for idx in soft_vector'range loop
+			tmp(idx) := logic_to_csft(val((idx + 1) * csft_scalar_logic'length - 1 downto idx * csft_scalar_logic'length));
+		end loop;
+		return tmp;
+	end function;
+
+	function csft_to_logic (val : csft_vector) return csft_vector_logic is
+		variable tmp : csft_vector_logic;
+	begin
+		for idx in soft_vector'range loop
+			tmp((idx + 1) * csft_scalar_logic'length - 1 downto idx * csft_scalar_logic'length) := csft_to_logic(val(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function logic_to_vsft (val : vsft_vector_logic) return vsft_vector is
+		variable tmp : vsft_vector;
+	begin
+		for idx in soft_vector'range loop
+			tmp(idx) := logic_to_vsft(val((idx + 1) * vsft_scalar_logic'length - 1 downto idx * vsft_scalar_logic'length));
+		end loop;
+		return tmp;
+	end function;
+
+	function vsft_to_logic (val : vsft_vector) return vsft_vector_logic is
+		variable tmp : vsft_vector_logic;
+	begin
+		for idx in soft_vector'range loop
+			tmp((idx + 1) * vsft_scalar_logic'length - 1 downto idx * vsft_scalar_logic'length) := vsft_to_logic(val(idx));
 		end loop;
 		return tmp;
 	end function;
