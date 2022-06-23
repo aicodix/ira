@@ -22,12 +22,19 @@ entity var_vector is
 end var_vector;
 
 architecture rtl of var_vector is
+	type vsft_array is array (0 to size-1) of vsft_vector_logic;
+	signal sfts : vsft_array := (others => (others => '0'));
 begin
-	vector_inst : for idx in soft_vector'range generate
-		scalar_inst : entity work.var_scalar
-			generic map (size)
-			port map (clock, wren, rden, wpos, rpos,
-				isft(idx), osft(idx));
-	end generate;
+	process (clock)
+	begin
+		if rising_edge(clock) then
+			if wren then
+				sfts(wpos) <= vsft_to_logic(isft);
+			end if;
+			if rden then
+				osft <= logic_to_vsft(sfts(rpos));
+			end if;
+		end if;
+	end process;
 end rtl;
 
