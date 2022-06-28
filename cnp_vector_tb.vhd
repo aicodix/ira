@@ -17,7 +17,7 @@ architecture behavioral of cnp_vector_tb is
 	signal done : boolean := false;
 	signal cnp_start : boolean := false;
 	signal cnp_count : count_scalar;
-	signal cnp_busy : boolean;
+	signal cnp_ready : boolean;
 	signal cnp_valid : boolean;
 	signal cnp_iseq : sequence_scalar;
 	signal cnp_oseq : sequence_scalar;
@@ -37,7 +37,7 @@ begin
 	cnp_inst : entity work.cnp_vector
 		port map (clock,
 			cnp_start, cnp_count,
-			cnp_busy, cnp_valid,
+			cnp_ready, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
 			cnp_icsft, cnp_ocsft,
@@ -95,7 +95,7 @@ begin
 	begin
 		if reset = '1' then
 			num := 0;
-		elsif rising_edge(clock) and not cnp_busy then
+		elsif rising_edge(clock) and cnp_ready then
 			if num = 0 then
 				readline(input, buf);
 				read(buf, cnt);

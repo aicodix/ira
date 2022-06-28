@@ -14,14 +14,14 @@ architecture behavioral of dec_vector_tb is
 	signal clock : std_logic := '0';
 	signal reset : std_logic := '1';
 	signal done : boolean := false;
-	signal dec_busy : boolean;
+	signal dec_ready : boolean;
 	signal dec_istart : boolean := false;
 	signal dec_ostart : boolean;
 	signal dec_isoft : soft_scalar := 0;
 	signal dec_osoft : soft_scalar;
 begin
 	dec_inst : entity work.dec_vector
-		port map (clock, dec_busy,
+		port map (clock, dec_ready,
 			dec_istart, dec_ostart,
 			dec_isoft, dec_osoft);
 
@@ -48,7 +48,7 @@ begin
 		if reset = '1' then
 			num := 0;
 		elsif rising_edge(clock) then
-			if dec_busy then
+			if not dec_ready then
 				num := 0;
 			elsif num < max then
 				num := num + 1;
@@ -84,7 +84,7 @@ begin
 	begin
 		if reset = '1' then
 			pos := 0;
-		elsif rising_edge(clock) and not dec_busy then
+		elsif rising_edge(clock) and dec_ready then
 			if pos = 0 then
 				if not eof then
 					readline(input, buf);

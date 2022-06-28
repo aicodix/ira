@@ -10,7 +10,7 @@ use work.table_scalar.all;
 entity dec_scalar is
 	port (
 		clock : in std_logic;
-		busy : out boolean := false;
+		ready : out boolean := true;
 		istart : in boolean;
 		ostart : out boolean := false;
 		isoft : in soft_scalar;
@@ -35,7 +35,7 @@ architecture rtl of dec_scalar is
 	signal cnt_ocnt : count_scalar;
 	signal cnp_start : boolean := false;
 	signal cnp_count : count_scalar;
-	signal cnp_busy, cnp_valid : boolean;
+	signal cnp_ready, cnp_valid : boolean;
 	signal cnp_iseq, cnp_oseq : sequence_scalar;
 	signal cnp_ivsft, cnp_ovsft : vsft_scalar;
 	signal cnp_icsft, cnp_ocsft : csft_scalar;
@@ -97,13 +97,13 @@ architecture rtl of dec_scalar is
 	end function;
 
 begin
-	loc_rden <= not cnp_busy;
+	loc_rden <= cnp_ready;
 	loc_inst : entity work.loc_scalar
 		port map (clock,
 			loc_rden, loc_rpos,
 			loc_ooff, loc_oshi);
 
-	var_rden <= not cnp_busy;
+	var_rden <= cnp_ready;
 	var_inst : entity work.var_scalar
 		generic map (code_scalars)
 		port map (clock,
@@ -115,7 +115,7 @@ begin
 		port map (clock,
 			cnt_rpos, cnt_ocnt);
 
-	bnl_rden <= not cnp_busy;
+	bnl_rden <= cnp_ready;
 	bnl_inst : entity work.bnl_scalar
 		generic map (scalar_locations_max)
 		port map (clock,
@@ -127,7 +127,7 @@ begin
 	cnp_inst : entity work.cnp_scalar
 		port map (clock,
 			cnp_start, cnp_count,
-			cnp_busy, cnp_valid,
+			cnp_ready, cnp_valid,
 			cnp_iseq, cnp_oseq,
 			cnp_ivsft, cnp_ovsft,
 			cnp_icsft, cnp_ocsft,
@@ -135,13 +135,13 @@ begin
 			cnp_iloc, cnp_oloc,
 			cnp_ioff, cnp_ooff);
 
-	off_clken <= not cnp_busy;
+	off_clken <= cnp_ready;
 	off_inst : entity work.off_scalar
 		port map (clock, off_clken,
 			off_ioff, off_ishi,
 			off_ibs, off_ooff);
 
-	sub_clken <= not cnp_busy;
+	sub_clken <= cnp_ready;
 	inv_sub_icsft <= inv(sub_icsft);
 	sub_inst : entity work.add_scalar
 		port map (clock, sub_clken,
@@ -174,7 +174,7 @@ begin
 					swap_cs <= swap_cs + block_scalars;
 				end if;
 				if swap_cs = code_scalars-2*block_scalars and swap_bs = block_scalars-1 then
-					busy <= true;
+					ready <= false;
 				end if;
 				if swap_cs = code_scalars-block_scalars and swap_bs = block_scalars-1 then
 					swap_stage(0) <= false;
@@ -206,11 +206,11 @@ begin
 			swap_stage(3) <= swap_stage(2);
 			if swap_stage(3) and not swap_stage(2) then
 				inp_stage(0) <= true;
---				busy <= false;
+--				ready <= true;
 			end if;
 
 			if inp_stage(0) then
-				if not cnp_busy then
+				if cnp_ready then
 					if inp_num = inp_cnt then
 						inp_num <= 0;
 						inp_cnt <= cnt_ocnt;
@@ -272,11 +272,11 @@ begin
 				inp_bs <= 0;
 			end if;
 
---			report boolean'image(inp_stage(0)) & HT & boolean'image(cnp_busy) & HT & integer'image(inp_seq) & HT &
+--			report boolean'image(inp_stage(0)) & HT & boolean'image(cnp_ready) & HT & integer'image(inp_seq) & HT &
 --				integer'image(inp_cnt) & HT & integer'image(inp_num) & HT & integer'image(inp_bs) & HT &
 --				integer'image(inp_blk) & HT & integer'image(inp_loc) & HT & integer'image(inp_pty);
 
-			if inp_stage(0) and not cnp_busy then
+			if inp_stage(0) and cnp_ready then
 				loc_rpos <= inp_blk;
 				inp_bs_d(1) <= inp_bs;
 				inp_num_d(1) <= inp_num;
@@ -286,7 +286,7 @@ begin
 			end if;
 
 			inp_stage(1) <= inp_stage(0);
-			if inp_stage(1) and not cnp_busy then
+			if inp_stage(1) and cnp_ready then
 				inp_bs_d(2) <= inp_bs_d(1);
 				inp_num_d(2) <= inp_num_d(1);
 				inp_cnt_d(2) <= inp_cnt_d(1);
@@ -295,7 +295,7 @@ begin
 			end if;
 
 			inp_stage(2) <= inp_stage(1);
-			if inp_stage(2) and not cnp_busy then
+			if inp_stage(2) and cnp_ready then
 				inp_wdf_d(1) <= inp_bs_d(2) = 0 and loc_ooff = code_blocks-1 and loc_oshi = block_scalars-1;
 				off_ioff <= loc_ooff;
 				off_ishi <= loc_oshi;
@@ -307,7 +307,7 @@ begin
 			end if;
 
 			inp_stage(3) <= inp_stage(2);
-			if inp_stage(3) and not cnp_busy then
+			if inp_stage(3) and cnp_ready then
 				inp_num_d(4) <= inp_num_d(3);
 				inp_cnt_d(4) <= inp_cnt_d(3);
 				inp_seq_d(4) <= inp_seq_d(3);
@@ -316,7 +316,7 @@ begin
 			end if;
 
 			inp_stage(4) <= inp_stage(3);
-			if inp_stage(4) and not cnp_busy then
+			if inp_stage(4) and cnp_ready then
 				var_rpos <= off_ooff;
 				bnl_rpos <= inp_loc_d(4);
 				inp_off_d(1) <= off_ooff;
@@ -328,7 +328,7 @@ begin
 			end if;
 
 			inp_stage(5) <= inp_stage(4);
-			if inp_stage(5) and not cnp_busy then
+			if inp_stage(5) and cnp_ready then
 				inp_num_d(6) <= inp_num_d(5);
 				inp_cnt_d(6) <= inp_cnt_d(5);
 				inp_seq_d(6) <= inp_seq_d(5);
@@ -338,7 +338,7 @@ begin
 			end if;
 
 			inp_stage(6) <= inp_stage(5);
-			if inp_stage(6) and not cnp_busy then
+			if inp_stage(6) and cnp_ready then
 				sub_ivsft <= var_osft;
 				if inp_seq_d(6) = 0 then
 					sub_icsft <= (false, 0);
@@ -356,7 +356,7 @@ begin
 			end if;
 
 			inp_stage(7) <= inp_stage(6);
-			if inp_stage(7) and not cnp_busy then
+			if inp_stage(7) and cnp_ready then
 				inp_num_d(8) <= inp_num_d(7);
 				inp_cnt_d(8) <= inp_cnt_d(7);
 				inp_seq_d(8) <= inp_seq_d(7);
@@ -367,7 +367,7 @@ begin
 			end if;
 
 			inp_stage(8) <= inp_stage(7);
-			if inp_stage(8) and not cnp_busy then
+			if inp_stage(8) and cnp_ready then
 				cnp_start <= inp_num_d(8) = 0;
 				cnp_count <= inp_cnt_d(8);
 				cnp_icsft <= inp_bnl_d(2);
@@ -382,10 +382,10 @@ begin
 				cnp_ioff <= inp_off_d(4);
 			end if;
 
---			report boolean'image(cnp_start) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & boolean'image(cnp_iwdf) & HT & integer'image(cnp_count) & HT &
+--			report boolean'image(cnp_start) & HT & boolean'image(cnp_ready) & HT & integer'image(cnp_iseq) & HT & integer'image(cnp_iloc) & HT & integer'image(cnp_ioff) & HT & boolean'image(cnp_iwdf) & HT & integer'image(cnp_count) & HT &
 --				integer'image(vsft_to_soft(cnp_ivsft));
 
---			report boolean'image(cnp_valid) & HT & boolean'image(cnp_busy) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT & boolean'image(cnp_owdf) & HT &
+--			report boolean'image(cnp_valid) & HT & boolean'image(cnp_ready) & HT & integer'image(cnp_oseq) & HT & integer'image(cnp_oloc) & HT & integer'image(cnp_ooff) & HT & boolean'image(cnp_owdf) & HT &
 --				integer'image(vsft_to_soft(cnp_ovsft)) & HT & integer'image(csft_to_soft(cnp_ocsft));
 
 			if out_stage(0) then
@@ -417,8 +417,8 @@ begin
 			if out_stage(3) and not out_stage(2) then
 				var_wren <= false;
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
-						not inp_stage(inp_stage'high) and not cnp_busy then
-					busy <= false;
+						not inp_stage(inp_stage'high) and cnp_ready then
+					ready <= true;
 				end if;
 			end if;
 		end if;

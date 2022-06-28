@@ -12,7 +12,7 @@ entity cnp_vector is
 		clock : in std_logic;
 		start : in boolean;
 		count : in count_scalar;
-		busy : out boolean := false;
+		ready : out boolean := true;
 		valid : out boolean := false;
 		iseq : in sequence_scalar;
 		oseq : out sequence_scalar;
@@ -104,7 +104,7 @@ begin
 				else
 					this_count <= count_scalar'low;
 					shorter <= true;
-					busy <= true;
+					ready <= false;
 				end if;
 				dmin <= imin;
 				dpty <= ipty;
@@ -114,9 +114,9 @@ begin
 				num <= num + 1;
 				if shorter then
 					if num = prev_count-2 then
-						busy <= false;
+						ready <= true;
 					elsif num = this_count-2 then
-						busy <= true;
+						ready <= false;
 					end if;
 					if num = prev_count-1 then
 						okay <= true;
