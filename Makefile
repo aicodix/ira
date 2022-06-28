@@ -14,20 +14,24 @@ all: scalar vector
 vcd: cnp_scalar_tb.vcd dec_scalar_tb.vcd
 
 .PRECIOUS: cnp_scalar_tb_out.txt
-cnp_scalar_tb_out.txt: cnp_scalar_tb cnp_scalar_tb_inp.txt
+cnp_scalar_tb_out.txt: cnp_scalar_tb cnp_scalar_tb_inp.txt cnp_scalar_tb_exp.txt
 	$(GHDL) -r --workdir=work $<
+	diff -q -s cnp_scalar_tb_out.txt cnp_scalar_tb_exp.txt
 
 .PRECIOUS: cnp_vector_tb_out.txt
-cnp_vector_tb_out.txt: cnp_vector_tb cnp_vector_tb_inp.txt
+cnp_vector_tb_out.txt: cnp_vector_tb cnp_vector_tb_inp.txt cnp_vector_tb_exp.txt
 	$(GHDL) -r --workdir=work $<
+	diff -q -s cnp_vector_tb_out.txt cnp_vector_tb_exp.txt
 
 .PRECIOUS: dec_scalar_tb_out.txt
-dec_scalar_tb_out.txt: dec_scalar_tb dec_scalar_tb_inp.txt
+dec_scalar_tb_out.txt: dec_scalar_tb dec_scalar_tb_inp.txt dec_scalar_tb_exp.txt
 	$(GHDL) -r --workdir=work $<
+	diff -q -s dec_scalar_tb_out.txt dec_scalar_tb_exp.txt
 
 .PRECIOUS: dec_vector_tb_out.txt
-dec_vector_tb_out.txt: dec_vector_tb dec_vector_tb_inp.txt
+dec_vector_tb_out.txt: dec_vector_tb dec_vector_tb_inp.txt dec_vector_tb_exp.txt
 	$(GHDL) -r --workdir=work $<
+	diff -q -s dec_vector_tb_out.txt dec_vector_tb_exp.txt
 
 .PRECIOUS: cnp_scalar_tb.vcd
 cnp_scalar_tb.vcd: cnp_scalar_tb cnp_scalar_tb_inp.txt
