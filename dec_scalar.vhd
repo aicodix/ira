@@ -19,9 +19,8 @@ entity dec_scalar is
 end dec_scalar;
 
 architecture rtl of dec_scalar is
-	signal itl_last, itl_last_next : boolean := false;
-	signal itl_cs : natural range 0 to code_scalars := code_scalars;
-	signal itl_bs : natural range 0 to block_scalars := block_scalars;
+	signal itl_pos : natural range 0 to code_scalars-1;
+	signal itl_start, itl_last, itl_last_next : boolean;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_scalars-1;
 	signal var_isft, var_osft : vsft_scalar;
@@ -53,7 +52,6 @@ architecture rtl of dec_scalar is
 	signal add_ivsft, add_ovsft : vsft_scalar;
 	signal add_icsft : csft_scalar;
 	signal pty_blocks : block_parities := init_block_parities;
-	signal msg_scalars : scalar_messages := BLOCK_SCALARS * (CODE_BLOCKS - init_block_parities);
 	signal inp_pty : natural range 0 to block_parities_max;
 	signal inp_bs : block_shift;
 	signal inp_seq, out_seq : sequence_scalar;
@@ -98,6 +96,15 @@ architecture rtl of dec_scalar is
 	end function;
 
 begin
+	itl_start <= istart or reap_start;
+	itl_inst : entity work.itl_scalar
+		port map (clock,
+			itl_start,
+			pty_blocks,
+			itl_pos,
+			itl_last,
+			itl_last_next);
+
 	loc_rden <= cnp_ready;
 	loc_inst : entity work.loc_scalar
 		port map (clock,
@@ -157,31 +164,6 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if istart or reap_start then
-				itl_cs <= 0;
-				itl_bs <= 0;
-			elsif itl_cs < msg_scalars then
-				itl_cs <= itl_cs + 1;
---				report "MSG" & HT & integer'image(itl_cs) & HT & integer'image(itl_bs);
-			elsif itl_bs /= block_scalars then
-				if itl_cs = code_scalars-block_scalars then
-					itl_cs <= msg_scalars;
-					itl_bs <= itl_bs + 1;
-				else
-					itl_cs <= itl_cs + block_scalars;
-				end if;
-				if itl_cs = code_scalars-3*block_scalars and itl_bs = block_scalars-1 then
-					itl_last_next <= true;
-				end if;
-				if itl_cs = code_scalars-2*block_scalars and itl_bs = block_scalars-1 then
-					itl_last <= true;
-					itl_last_next <= false;
-				end if;
---				report "PTY" & HT & integer'image(itl_cs) & HT & integer'image(itl_bs);
-			else
-				itl_last <= false;
-			end if;
-
 			if istart then
 				seed_stage(0) <= true;
 			end if;
@@ -195,7 +177,7 @@ begin
 				end if;
 				var_wren <= true;
 				var_isft <= soft_to_vsft(isoft);
-				var_wpos <= itl_cs + itl_bs;
+				var_wpos <= itl_pos;
 			end if;
 
 			seed_stage(1) <= seed_stage(0);
@@ -427,7 +409,7 @@ begin
 				if itl_last then
 					reap_stage(0) <= false;
 				end if;
-				var_rpos <= itl_cs + itl_bs;
+				var_rpos <= itl_pos;
 			end if;
 
 			reap_stage(1) <= reap_stage(0);

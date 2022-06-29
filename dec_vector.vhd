@@ -20,13 +20,11 @@ entity dec_vector is
 end dec_vector;
 
 architecture rtl of dec_vector is
-	signal itl_last, itl_last_next : boolean := false;
-	signal itl_cv : natural range 0 to code_vectors := code_vectors;
-	signal itl_vs : natural range 0 to vector_scalars := vector_scalars;
-	signal itl_bv : natural range 0 to block_vectors-1;
-	subtype vector_index is natural range 0 to vector_scalars-1;
-	type itl_vs_delays is array (1 to 2) of vector_index;
-	signal itl_vs_d : itl_vs_delays;
+	type itl_idx_delays is array (1 to 2) of vector_shift;
+	signal itl_idx_d : itl_idx_delays;
+	signal itl_pos : natural range 0 to code_vectors-1;
+	signal itl_idx : vector_shift;
+	signal itl_start, itl_last, itl_last_next : boolean := false;
 	signal prev_vsft : vsft_scalar;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
@@ -65,7 +63,6 @@ architecture rtl of dec_vector is
 	signal add_ivsft, add_ovsft : vsft_vector;
 	signal add_icsft : csft_vector;
 	signal ptys : vector_parities := init_vector_parities;
-	signal msgs : vector_messages := CODE_VECTORS - init_vector_parities;
 	signal inp_pty : natural range 0 to vector_parities_max;
 	signal inp_seq, out_seq : sequence_scalar;
 	type inp_stages is array (0 to 8) of boolean;
@@ -116,6 +113,16 @@ architecture rtl of dec_vector is
 		return tmp;
 	end function;
 begin
+	itl_start <= istart or reap_start;
+	itl_inst : entity work.itl_vector
+		port map (clock,
+			itl_start,
+			ptys,
+			itl_pos,
+			itl_idx,
+			itl_last,
+			itl_last_next);
+
 	loc_rden <= cnp_ready;
 	loc_inst : entity work.loc_vector
 		port map (clock,
@@ -188,47 +195,6 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if istart or reap_start then
-				itl_cv <= 0;
-				itl_bv <= 0;
-				itl_vs <= 0;
-			elsif itl_cv < msgs then
-				if itl_bv = block_vectors-1 then
-					itl_bv <= 0;
-					if itl_vs = vector_scalars-1 then
-						itl_vs <= 0;
-						itl_cv <= itl_cv + block_vectors;
-					else
-						itl_vs <= itl_vs + 1;
-					end if;
-				else
-					itl_bv <= itl_bv + 1;
-				end if;
---				report "MSG" & HT & integer'image(itl_cv) & HT & integer'image(itl_bv) & HT & integer'image(itl_vs);
-			elsif itl_vs /= vector_scalars then
-				if itl_cv = code_vectors-block_vectors then
-					itl_cv <= msgs;
-					if itl_bv = block_vectors-1 then
-						itl_bv <= 0;
-						itl_vs <= itl_vs + 1;
-					else
-						itl_bv <= itl_bv + 1;
-					end if;
-				else
-					itl_cv <= itl_cv + block_vectors;
-				end if;
-				if itl_cv = code_vectors-3*block_vectors and itl_bv = block_vectors-1 and itl_vs = vector_scalars-1 then
-					itl_last_next <= true;
-				end if;
-				if itl_cv = code_vectors-2*block_vectors and itl_bv = block_vectors-1 and itl_vs = vector_scalars-1 then
-					itl_last <= true;
-					itl_last_next <= false;
-				end if;
---				report "PTY" & HT & integer'image(itl_cv) & HT & integer'image(itl_bv) & HT & integer'image(itl_vs);
-			else
-				itl_last <= false;
-			end if;
-
 			if istart then
 				seed_stage(0) <= true;
 			end if;
@@ -240,15 +206,15 @@ begin
 				if itl_last then
 					seed_stage(0) <= false;
 				end if;
-				itl_vs_d(1) <= itl_vs;
+				itl_idx_d(1) <= itl_idx;
 				seed_soft_d(1) <= isoft;
-				seed_pos <= itl_cv + itl_bv;
-				var_rpos <= itl_cv + itl_bv;
+				seed_pos <= itl_pos;
+				var_rpos <= itl_pos;
 			end if;
 
 			seed_stage(1) <= seed_stage(0);
 			if seed_stage(1) then
-				itl_vs_d(2) <= itl_vs_d(1);
+				itl_idx_d(2) <= itl_idx_d(1);
 				seed_soft_d(2) <= seed_soft_d(1);
 				seed_dpos <= seed_pos;
 			end if;
@@ -258,7 +224,7 @@ begin
 				var_wren <= true;
 				var_wpos <= seed_dpos;
 				for idx in soft_vector'range loop
-					if itl_vs_d(2) = idx then
+					if itl_idx_d(2) = idx then
 						var_isft(idx) <= soft_to_vsft(seed_soft_d(2));
 					else
 						var_isft(idx) <= var_osft(idx);
@@ -532,19 +498,19 @@ begin
 				if itl_last then
 					reap_stage(0) <= false;
 				end if;
-				itl_vs_d(1) <= itl_vs;
-				var_rpos <= itl_cv + itl_bv;
+				itl_idx_d(1) <= itl_idx;
+				var_rpos <= itl_pos;
 			end if;
 
 			reap_stage(1) <= reap_stage(0);
 			if reap_stage(1) then
-				itl_vs_d(2) <= itl_vs_d(1);
+				itl_idx_d(2) <= itl_idx_d(1);
 				ostart <= not reap_stage(2);
 			end if;
 
 			reap_stage(2) <= reap_stage(1);
 			if reap_stage(2) then
-				osoft <= vsft_to_soft(var_osft(itl_vs_d(2)));
+				osoft <= vsft_to_soft(var_osft(itl_idx_d(2)));
 				if not reap_stage(1) then
 					ready <= true;
 				end if;
