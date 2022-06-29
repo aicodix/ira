@@ -20,12 +20,13 @@ entity dec_vector is
 end dec_vector;
 
 architecture rtl of dec_vector is
-	signal swap_cv : natural range 0 to code_vectors := code_vectors;
-	signal swap_vs : natural range 0 to vector_scalars := vector_scalars;
-	signal swap_bv : natural range 0 to block_vectors-1;
+	signal itl_last, itl_last_next : boolean := false;
+	signal itl_cv : natural range 0 to code_vectors := code_vectors;
+	signal itl_vs : natural range 0 to vector_scalars := vector_scalars;
+	signal itl_bv : natural range 0 to block_vectors-1;
 	subtype vector_index is natural range 0 to vector_scalars-1;
-	type swap_vs_delays is array (1 to 2) of vector_index;
-	signal swap_vs_d : swap_vs_delays;
+	type itl_vs_delays is array (1 to 2) of vector_index;
+	signal itl_vs_d : itl_vs_delays;
 	signal prev_vsft : vsft_scalar;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
@@ -66,17 +67,17 @@ architecture rtl of dec_vector is
 	signal ptys : vector_parities := init_vector_parities;
 	signal msgs : vector_messages := CODE_VECTORS - init_vector_parities;
 	signal inp_pty : natural range 0 to vector_parities_max;
-	signal prev_start : boolean := false;
-	type swap_start_delays is array (1 to 2) of boolean;
-	signal swap_start_d : swap_start_delays := (others => false);
 	signal inp_seq, out_seq : sequence_scalar;
 	type inp_stages is array (0 to 8) of boolean;
 	signal inp_stage : inp_stages := (others => false);
-	type swap_stages is array (0 to 3) of boolean;
-	signal swap_stage : swap_stages := (others => false);
-	type swap_soft_delays is array (1 to 2) of soft_scalar;
-	signal swap_soft_d : swap_soft_delays;
-	signal swap_pos, swap_dpos : natural range 0 to code_vectors-1;
+	type seed_stages is array (0 to 3) of boolean;
+	signal seed_stage : seed_stages := (others => false);
+	type seed_soft_delays is array (1 to 2) of soft_scalar;
+	signal seed_soft_d : seed_soft_delays;
+	signal seed_pos, seed_dpos : natural range 0 to code_vectors-1;
+	type reap_stages is array (0 to 2) of boolean;
+	signal reap_stage : reap_stages := (others => false);
+	signal reap_start : boolean := false;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal inp_num : num_scalar := 0;
 	signal inp_cnt : count_scalar := degree_max;
@@ -187,80 +188,86 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
+			if istart or reap_start then
+				itl_cv <= 0;
+				itl_bv <= 0;
+				itl_vs <= 0;
+			elsif itl_cv < msgs then
+				if itl_bv = block_vectors-1 then
+					itl_bv <= 0;
+					if itl_vs = vector_scalars-1 then
+						itl_vs <= 0;
+						itl_cv <= itl_cv + block_vectors;
+					else
+						itl_vs <= itl_vs + 1;
+					end if;
+				else
+					itl_bv <= itl_bv + 1;
+				end if;
+--				report "MSG" & HT & integer'image(itl_cv) & HT & integer'image(itl_bv) & HT & integer'image(itl_vs);
+			elsif itl_vs /= vector_scalars then
+				if itl_cv = code_vectors-block_vectors then
+					itl_cv <= msgs;
+					if itl_bv = block_vectors-1 then
+						itl_bv <= 0;
+						itl_vs <= itl_vs + 1;
+					else
+						itl_bv <= itl_bv + 1;
+					end if;
+				else
+					itl_cv <= itl_cv + block_vectors;
+				end if;
+				if itl_cv = code_vectors-3*block_vectors and itl_bv = block_vectors-1 and itl_vs = vector_scalars-1 then
+					itl_last_next <= true;
+				end if;
+				if itl_cv = code_vectors-2*block_vectors and itl_bv = block_vectors-1 and itl_vs = vector_scalars-1 then
+					itl_last <= true;
+					itl_last_next <= false;
+				end if;
+--				report "PTY" & HT & integer'image(itl_cv) & HT & integer'image(itl_bv) & HT & integer'image(itl_vs);
+			else
+				itl_last <= false;
+			end if;
+
 			if istart then
-				swap_cv <= 0;
-				swap_bv <= 0;
-				swap_vs <= 0;
-				swap_start_d(1) <= prev_start;
-				prev_start <= istart;
-				swap_stage(0) <= true;
-			elsif swap_cv < msgs then
-				swap_start_d(1) <= false;
-				if swap_bv = block_vectors-1 then
-					swap_bv <= 0;
-					if swap_vs = vector_scalars-1 then
-						swap_vs <= 0;
-						swap_cv <= swap_cv + block_vectors;
-					else
-						swap_vs <= swap_vs + 1;
-					end if;
-				else
-					swap_bv <= swap_bv + 1;
-				end if;
---				report "MSG" & HT & integer'image(swap_cv) & HT & integer'image(swap_bv) & HT & integer'image(swap_vs);
-			elsif swap_vs /= vector_scalars then
-				if swap_cv = code_vectors-block_vectors then
-					swap_cv <= msgs;
-					if swap_bv = block_vectors-1 then
-						swap_bv <= 0;
-						swap_vs <= swap_vs + 1;
-					else
-						swap_bv <= swap_bv + 1;
-					end if;
-				else
-					swap_cv <= swap_cv + block_vectors;
-				end if;
-				if swap_cv = code_vectors-2*block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
+				seed_stage(0) <= true;
+			end if;
+
+			if seed_stage(0) then
+				if itl_last_next then
 					ready <= false;
 				end if;
-				if swap_cv = code_vectors-block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
-					swap_stage(0) <= false;
+				if itl_last then
+					seed_stage(0) <= false;
 				end if;
---				report "PTY" & HT & integer'image(swap_cv) & HT & integer'image(swap_bv) & HT & integer'image(swap_vs);
+				itl_vs_d(1) <= itl_vs;
+				seed_soft_d(1) <= isoft;
+				seed_pos <= itl_cv + itl_bv;
+				var_rpos <= itl_cv + itl_bv;
 			end if;
 
-			if swap_stage(0) then
-				swap_vs_d(1) <= swap_vs;
-				swap_start_d(2) <= swap_start_d(1);
-				swap_soft_d(1) <= isoft;
-				swap_pos <= swap_cv + swap_bv;
-				var_rpos <= swap_cv + swap_bv;
+			seed_stage(1) <= seed_stage(0);
+			if seed_stage(1) then
+				itl_vs_d(2) <= itl_vs_d(1);
+				seed_soft_d(2) <= seed_soft_d(1);
+				seed_dpos <= seed_pos;
 			end if;
 
-			swap_stage(1) <= swap_stage(0);
-			if swap_stage(1) then
-				swap_vs_d(2) <= swap_vs_d(1);
-				ostart <= swap_start_d(2);
-				swap_soft_d(2) <= swap_soft_d(1);
-				swap_dpos <= swap_pos;
-			end if;
-
-			swap_stage(2) <= swap_stage(1);
-			if swap_stage(2) then
-				osoft <= vsft_to_soft(var_osft(swap_vs_d(2)));
+			seed_stage(2) <= seed_stage(1);
+			if seed_stage(2) then
 				var_wren <= true;
-				var_wpos <= swap_dpos;
+				var_wpos <= seed_dpos;
 				for idx in soft_vector'range loop
-					if swap_vs_d(2) = idx then
-						var_isft(idx) <= soft_to_vsft(swap_soft_d(2));
+					if itl_vs_d(2) = idx then
+						var_isft(idx) <= soft_to_vsft(seed_soft_d(2));
 					else
 						var_isft(idx) <= var_osft(idx);
 					end if;
 				end loop;
 			end if;
 
-			swap_stage(3) <= swap_stage(2);
-			if swap_stage(3) and not swap_stage(2) then
+			seed_stage(3) <= seed_stage(2);
+			if seed_stage(3) and not seed_stage(2) then
 				var_wren <= false;
 				inp_stage(0) <= true;
 --				ready <= true;
@@ -512,6 +519,33 @@ begin
 				var_wren <= false;
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
 						not inp_stage(inp_stage'high) and cnp_ready then
+					reap_start <= true;
+				end if;
+			end if;
+
+			if reap_start then
+				reap_start <= false;
+				reap_stage(0) <= true;
+			end if;
+
+			if reap_stage(0) then
+				if itl_last then
+					reap_stage(0) <= false;
+				end if;
+				itl_vs_d(1) <= itl_vs;
+				var_rpos <= itl_cv + itl_bv;
+			end if;
+
+			reap_stage(1) <= reap_stage(0);
+			if reap_stage(1) then
+				itl_vs_d(2) <= itl_vs_d(1);
+				ostart <= not reap_stage(2);
+			end if;
+
+			reap_stage(2) <= reap_stage(1);
+			if reap_stage(2) then
+				osoft <= vsft_to_soft(var_osft(itl_vs_d(2)));
+				if not reap_stage(1) then
 					ready <= true;
 				end if;
 			end if;

@@ -19,8 +19,9 @@ entity dec_scalar is
 end dec_scalar;
 
 architecture rtl of dec_scalar is
-	signal swap_cs : natural range 0 to code_scalars := code_scalars;
-	signal swap_bs : natural range 0 to block_scalars := block_scalars;
+	signal itl_last, itl_last_next : boolean := false;
+	signal itl_cs : natural range 0 to code_scalars := code_scalars;
+	signal itl_bs : natural range 0 to block_scalars := block_scalars;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_scalars-1;
 	signal var_isft, var_osft : vsft_scalar;
@@ -55,14 +56,14 @@ architecture rtl of dec_scalar is
 	signal msg_scalars : scalar_messages := BLOCK_SCALARS * (CODE_BLOCKS - init_block_parities);
 	signal inp_pty : natural range 0 to block_parities_max;
 	signal inp_bs : block_shift;
-	signal prev_start : boolean := false;
-	type swap_start_delays is array (1 to 2) of boolean;
-	signal swap_start_d : swap_start_delays := (others => false);
 	signal inp_seq, out_seq : sequence_scalar;
 	type inp_stages is array (0 to 8) of boolean;
 	signal inp_stage : inp_stages := (others => false);
-	type swap_stages is array (0 to 3) of boolean;
-	signal swap_stage : swap_stages := (others => false);
+	type seed_stages is array (0 to 1) of boolean;
+	signal seed_stage : seed_stages := (others => false);
+	type reap_stages is array (0 to 2) of boolean;
+	signal reap_stage : reap_stages := (others => false);
+	signal reap_start : boolean := false;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal inp_num : num_scalar := 0;
 	signal inp_cnt : count_scalar := degree_max;
@@ -156,55 +157,50 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if istart then
-				swap_cs <= 0;
-				swap_bs <= 0;
-				swap_start_d(1) <= prev_start;
-				prev_start <= istart;
-				swap_stage(0) <= true;
-			elsif swap_cs < msg_scalars then
-				swap_start_d(1) <= false;
-				swap_cs <= swap_cs + 1;
---				report "MSG" & HT & integer'image(swap_cs) & HT & integer'image(swap_bs);
-			elsif swap_bs /= block_scalars then
-				if swap_cs = code_scalars-block_scalars then
-					swap_cs <= msg_scalars;
-					swap_bs <= swap_bs + 1;
+			if istart or reap_start then
+				itl_cs <= 0;
+				itl_bs <= 0;
+			elsif itl_cs < msg_scalars then
+				itl_cs <= itl_cs + 1;
+--				report "MSG" & HT & integer'image(itl_cs) & HT & integer'image(itl_bs);
+			elsif itl_bs /= block_scalars then
+				if itl_cs = code_scalars-block_scalars then
+					itl_cs <= msg_scalars;
+					itl_bs <= itl_bs + 1;
 				else
-					swap_cs <= swap_cs + block_scalars;
+					itl_cs <= itl_cs + block_scalars;
 				end if;
-				if swap_cs = code_scalars-2*block_scalars and swap_bs = block_scalars-1 then
+				if itl_cs = code_scalars-3*block_scalars and itl_bs = block_scalars-1 then
+					itl_last_next <= true;
+				end if;
+				if itl_cs = code_scalars-2*block_scalars and itl_bs = block_scalars-1 then
+					itl_last <= true;
+					itl_last_next <= false;
+				end if;
+--				report "PTY" & HT & integer'image(itl_cs) & HT & integer'image(itl_bs);
+			else
+				itl_last <= false;
+			end if;
+
+			if istart then
+				seed_stage(0) <= true;
+			end if;
+
+			if seed_stage(0) then
+				if itl_last_next then
 					ready <= false;
 				end if;
-				if swap_cs = code_scalars-block_scalars and swap_bs = block_scalars-1 then
-					swap_stage(0) <= false;
+				if itl_last then
+					seed_stage(0) <= false;
 				end if;
---				report "PTY" & HT & integer'image(swap_cs) & HT & integer'image(swap_bs);
-			end if;
-
-			if swap_stage(0) then
-				swap_start_d(2) <= swap_start_d(1);
 				var_wren <= true;
 				var_isft <= soft_to_vsft(isoft);
-				var_wpos <= swap_cs + swap_bs;
-				var_rpos <= swap_cs + swap_bs;
+				var_wpos <= itl_cs + itl_bs;
 			end if;
 
-			swap_stage(1) <= swap_stage(0);
-			if swap_stage(1) then
-				if not swap_stage(0) then
-					var_wren <= false;
-				end if;
-				ostart <= swap_start_d(2);
-			end if;
-
-			swap_stage(2) <= swap_stage(1);
-			if swap_stage(2) then
-				osoft <= vsft_to_soft(var_osft);
-			end if;
-
-			swap_stage(3) <= swap_stage(2);
-			if swap_stage(3) and not swap_stage(2) then
+			seed_stage(1) <= seed_stage(0);
+			if seed_stage(1) and not seed_stage(0) then
+				var_wren <= false;
 				inp_stage(0) <= true;
 --				ready <= true;
 			end if;
@@ -418,6 +414,31 @@ begin
 				var_wren <= false;
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
 						not inp_stage(inp_stage'high) and cnp_ready then
+					reap_start <= true;
+				end if;
+			end if;
+
+			if reap_start then
+				reap_start <= false;
+				reap_stage(0) <= true;
+			end if;
+
+			if reap_stage(0) then
+				if itl_last then
+					reap_stage(0) <= false;
+				end if;
+				var_rpos <= itl_cs + itl_bs;
+			end if;
+
+			reap_stage(1) <= reap_stage(0);
+			if reap_stage(1) then
+				ostart <= not reap_stage(2);
+			end if;
+
+			reap_stage(2) <= reap_stage(1);
+			if reap_stage(2) then
+				osoft <= vsft_to_soft(var_osft);
+				if not reap_stage(1) then
 					ready <= true;
 				end if;
 			end if;

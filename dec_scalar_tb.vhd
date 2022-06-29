@@ -88,8 +88,8 @@ begin
 			if pos = 0 then
 				if not eof then
 					readline(input, buf);
+					dec_istart <= true;
 				end if;
-				dec_istart <= true;
 			else
 				dec_istart <= false;
 				if eof then
