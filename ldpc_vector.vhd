@@ -7,7 +7,7 @@ use ieee.std_logic_1164.all;
 use work.ldpc_scalar.all;
 
 package ldpc_vector is
-	constant vector_scalars : positive := 30;
+	constant vector_scalars : positive := 60;
 	constant code_vectors : positive := code_scalars / vector_scalars;
 	constant block_vectors : positive := block_scalars / vector_scalars;
 	constant vector_locations_max : positive := (total_links_max+1) / vector_scalars;
