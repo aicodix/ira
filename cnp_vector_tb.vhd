@@ -35,7 +35,7 @@ architecture behavioral of cnp_vector_tb is
 	signal cnp_oshi : vector_shift;
 begin
 	cnp_inst : entity work.cnp_vector
-		port map (clock,
+		port map (clock, reset,
 			cnp_start, cnp_count,
 			cnp_ready, cnp_valid,
 			cnp_iseq, cnp_oseq,

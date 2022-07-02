@@ -32,7 +32,7 @@ architecture behavioral of cnp_scalar_tb is
 	signal cnp_ooff : scalar_offset;
 begin
 	cnp_inst : entity work.cnp_scalar
-		port map (clock,
+		port map (clock, reset,
 			cnp_start, cnp_count,
 			cnp_ready, cnp_valid,
 			cnp_iseq, cnp_oseq,

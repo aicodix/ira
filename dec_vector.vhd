@@ -11,10 +11,12 @@ use work.table_vector.all;
 entity dec_vector is
 	port (
 		clock : in std_logic;
-		ready : out boolean := true;
-		istart : in boolean;
-		ostart : out boolean := false;
+		reset : in std_logic;
+		iready : out boolean := false;
+		ivalid : in boolean;
 		isoft : in soft_scalar;
+		oready : in boolean;
+		ovalid : out boolean := false;
 		osoft : out soft_scalar
 	);
 end dec_vector;
@@ -22,9 +24,10 @@ end dec_vector;
 architecture rtl of dec_vector is
 	type itl_idx_delays is array (1 to 2) of vector_shift;
 	signal itl_idx_d : itl_idx_delays;
+	signal itl_clken : boolean := false;
 	signal itl_pos : natural range 0 to code_vectors-1;
 	signal itl_idx : vector_shift;
-	signal itl_start, itl_last, itl_last_next : boolean := false;
+	signal itl_last, itl_last_next : boolean;
 	signal prev_vsft : vsft_scalar;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
@@ -67,19 +70,24 @@ architecture rtl of dec_vector is
 	signal inp_seq, out_seq : sequence_scalar;
 	type inp_stages is array (0 to 8) of boolean;
 	signal inp_stage : inp_stages := (others => false);
-	type seed_stages is array (0 to 3) of boolean;
+	type seed_stages is array (0 to 4) of boolean;
 	signal seed_stage : seed_stages := (others => false);
-	type seed_soft_delays is array (1 to 2) of soft_scalar;
+	type seed_soft_delays is array (1 to 3) of soft_scalar;
 	signal seed_soft_d : seed_soft_delays;
-	signal seed_pos, seed_dpos : natural range 0 to code_vectors-1;
-	type reap_stages is array (0 to 2) of boolean;
+	type seed_pos_delays is array (1 to 2) of vector_offset;
+	signal seed_pos_d : seed_pos_delays;
+	type seed_valid_delays is array (1 to 3) of boolean;
+	signal seed_valid_d : seed_valid_delays;
+	signal seed_start : boolean := true;
+	type reap_stages is array (0 to 3) of boolean;
 	signal reap_stage : reap_stages := (others => false);
-	signal reap_start : boolean := false;
+	type ovalid_delays is array (1 to 3) of boolean;
+	signal ovalid_d : ovalid_delays := (others => false);
 	subtype num_scalar is natural range 0 to degree_max;
 	signal inp_num : num_scalar := 0;
 	signal inp_cnt : count_scalar := degree_max;
 	signal inp_loc : vector_location;
-	type out_stages is array (0 to 5) of boolean;
+	type out_stages is array (0 to 4) of boolean;
 	signal out_stage : out_stages := (others => false);
 	type out_off_delays is array (1 to 4) of vector_offset;
 	signal out_off_d : out_off_delays;
@@ -113,10 +121,9 @@ architecture rtl of dec_vector is
 		return tmp;
 	end function;
 begin
-	itl_start <= istart or reap_start;
 	itl_inst : entity work.itl_vector
-		port map (clock,
-			itl_start,
+		port map (clock, reset,
+			itl_clken,
 			ptys,
 			itl_pos,
 			itl_idx,
@@ -156,9 +163,8 @@ begin
 			bnl_wpos, bnl_rpos,
 			bnl_isft, bnl_osft);
 
-	out_stage(0) <= cnp_valid;
 	cnp_inst : entity work.cnp_vector
-		port map (clock,
+		port map (clock, reset,
 			cnp_start, cnp_count,
 			cnp_ready, cnp_valid,
 			cnp_iseq, cnp_oseq,
@@ -192,51 +198,85 @@ begin
 			add_ivsft, add_icsft,
 			add_ovsft);
 
-	process (clock)
+	process (clock, reset)
 	begin
-		if rising_edge(clock) then
-			if istart then
+		if reset = '1' then
+			iready <= false;
+			ovalid <= false;
+			itl_clken <= false;
+			var_wren <= false;
+--			var_rden <= false;
+			bnl_wren <= false;
+--			bnl_rden <= false;
+			wdf_wren <= false;
+--			wdf_rden <= false;
+--			loc_rden  <= false;
+			cnp_start <= false;
+			inp_stage <= (others => false);
+			seed_stage <= (others => false);
+			seed_start <= true;
+			reap_stage <= (others => false);
+			ovalid_d <= (others => false);
+			inp_num <= 0;
+			inp_cnt <= degree_max;
+			out_stage <= (others => false);
+		elsif rising_edge(clock) then
+			if seed_start then
+				seed_start <= false;
 				seed_stage(0) <= true;
+				iready <= true;
 			end if;
 
 			if seed_stage(0) then
 				if itl_last_next then
-					ready <= false;
+					iready <= not ivalid;
 				end if;
 				if itl_last then
 					seed_stage(0) <= false;
+					itl_clken <= false;
+					seed_valid_d(1) <= false;
+				else
+					itl_clken <= ivalid;
+					seed_valid_d(1) <= ivalid;
 				end if;
-				itl_idx_d(1) <= itl_idx;
 				seed_soft_d(1) <= isoft;
-				seed_pos <= itl_pos;
-				var_rpos <= itl_pos;
 			end if;
 
 			seed_stage(1) <= seed_stage(0);
 			if seed_stage(1) then
-				itl_idx_d(2) <= itl_idx_d(1);
+				itl_idx_d(1) <= itl_idx;
 				seed_soft_d(2) <= seed_soft_d(1);
-				seed_dpos <= seed_pos;
+				seed_valid_d(2) <= seed_valid_d(1);
+				seed_pos_d(1) <= itl_pos;
+				var_rpos <= itl_pos;
 			end if;
 
 			seed_stage(2) <= seed_stage(1);
 			if seed_stage(2) then
-				var_wren <= true;
-				var_wpos <= seed_dpos;
+				seed_pos_d(2) <= seed_pos_d(1);
+				itl_idx_d(2) <= itl_idx_d(1);
+				seed_soft_d(3) <= seed_soft_d(2);
+				seed_valid_d(3) <= seed_valid_d(2);
+			end if;
+
+			seed_stage(3) <= seed_stage(2);
+			if seed_stage(3) then
+				var_wren <= seed_valid_d(3);
+				var_wpos <= seed_pos_d(2);
 				for idx in soft_vector'range loop
 					if itl_idx_d(2) = idx then
-						var_isft(idx) <= soft_to_vsft(seed_soft_d(2));
+						var_isft(idx) <= soft_to_vsft(seed_soft_d(3));
 					else
 						var_isft(idx) <= var_osft(idx);
 					end if;
 				end loop;
+--				report boolean'image(seed_valid_d(3)) & HT & integer'image(seed_pos_d(2)) & HT & integer'image(seed_soft_d(3));
 			end if;
 
-			seed_stage(3) <= seed_stage(2);
-			if seed_stage(3) and not seed_stage(2) then
+			seed_stage(4) <= seed_stage(3);
+			if seed_stage(4) and not seed_stage(3) then
 				var_wren <= false;
 				inp_stage(0) <= true;
---				ready <= true;
 			end if;
 
 			if inp_stage(0) then
@@ -431,7 +471,8 @@ begin
 --				integer'image(vsft_to_soft(cnp_ovsft(0))) & HT & integer'image(vsft_to_soft(cnp_ovsft(1))) & HT & integer'image(vsft_to_soft(cnp_ovsft(2))) & HT & integer'image(vsft_to_soft(cnp_ovsft(3))) & HT & integer'image(vsft_to_soft(cnp_ovsft(4))) & HT &
 --				integer'image(csft_to_soft(cnp_ocsft(0))) & HT & integer'image(csft_to_soft(cnp_ocsft(1))) & HT & integer'image(csft_to_soft(cnp_ocsft(2))) & HT & integer'image(csft_to_soft(cnp_ocsft(3))) & HT & integer'image(csft_to_soft(cnp_ocsft(4)));
 
-			if  out_stage(0) then
+			if cnp_valid then
+				out_stage(0) <= true;
 				add_ivsft <= cnp_ovsft;
 				add_icsft <= cnp_ocsft;
 				out_wdf_d(1) <= cnp_owdf;
@@ -445,18 +486,18 @@ begin
 					bnl_isft <= (others => (false, 0));
 				end if;
 			else
+				out_stage(0) <= false;
 				bnl_wren <= false;
 			end if;
 
-			out_stage(1) <= out_stage(0);
-			if out_stage(1) then
+			if out_stage(0) then
 				out_off_d(2) <= out_off_d(1);
 				out_shi_d(2) <= out_shi_d(1);
 				out_wdf_d(2) <= out_wdf_d(1);
 			end if;
 
-			out_stage(2) <= out_stage(1);
-			if out_stage(2) then
+			out_stage(1) <= out_stage(0);
+			if out_stage(1) then
 				ror_shift <= out_shi_d(2);
 				if out_off_d(2) = code_vectors-1 and out_shi_d(2) = vector_scalars-1 then
 					ror_ivsft <= prev_vsft & add_ovsft(vsft_vector'low+1 to vsft_vector'high);
@@ -467,52 +508,58 @@ begin
 				out_wdf_d(3) <= out_wdf_d(2);
 			end if;
 
-			out_stage(3) <= out_stage(2);
-			if out_stage(3) then
+			out_stage(2) <= out_stage(1);
+			if out_stage(2) then
 				out_off_d(4) <= out_off_d(3);
 				out_wdf_d(4) <= out_wdf_d(3);
 			end if;
 
-			out_stage(4) <= out_stage(3);
-			if out_stage(4) then
+			out_stage(3) <= out_stage(2);
+			if out_stage(3) then
 				var_isft <= ror_ovsft;
 				var_wpos <= out_off_d(4);
 				var_wren <= not out_wdf_d(4);
 			end if;
 
-			out_stage(5) <= out_stage(4);
-			if out_stage(5) and not out_stage(4) then
+			out_stage(4) <= out_stage(3);
+			if out_stage(4) and not out_stage(3) then
 				var_wren <= false;
 				if out_stage = (out_stage'low to out_stage'high-1 => false) & true and
 						not inp_stage(inp_stage'high) and cnp_ready then
-					reap_start <= true;
+					reap_stage(0) <= true;
 				end if;
-			end if;
-
-			if reap_start then
-				reap_start <= false;
-				reap_stage(0) <= true;
 			end if;
 
 			if reap_stage(0) then
 				if itl_last then
 					reap_stage(0) <= false;
+					itl_clken <= false;
+					ovalid_d(1) <= false;
+				else
+					itl_clken <= oready;
+					ovalid_d(1) <= oready;
 				end if;
-				itl_idx_d(1) <= itl_idx;
-				var_rpos <= itl_pos;
 			end if;
 
 			reap_stage(1) <= reap_stage(0);
 			if reap_stage(1) then
-				itl_idx_d(2) <= itl_idx_d(1);
-				ostart <= not reap_stage(2);
+				var_rpos <= itl_pos;
+				itl_idx_d(1) <= itl_idx;
+				ovalid_d(2) <= ovalid_d(1);
 			end if;
 
 			reap_stage(2) <= reap_stage(1);
 			if reap_stage(2) then
+				itl_idx_d(2) <= itl_idx_d(1);
+				ovalid_d(3) <= ovalid_d(2);
+			end if;
+
+			reap_stage(3) <= reap_stage(2);
+			if reap_stage(3) then
 				osoft <= vsft_to_soft(var_osft(itl_idx_d(2)));
-				if not reap_stage(1) then
-					ready <= true;
+				ovalid <= ovalid_d(3);
+				if not reap_stage(2) then
+					seed_start <= true;
 				end if;
 			end if;
 		end if;

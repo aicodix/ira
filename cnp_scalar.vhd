@@ -9,6 +9,7 @@ use work.ldpc_scalar.all;
 entity cnp_scalar is
 	port (
 		clock : in std_logic;
+		reset : in std_logic;
 		start : in boolean;
 		count : in count_scalar;
 		ready : out boolean := true;
@@ -75,9 +76,18 @@ begin
 	ooff <= buf_ooff;
 	finalize <= false when not this_start else num = prev_count when shorter else num = this_count;
 
-	process (clock)
+	process (clock, reset)
 	begin
-		if rising_edge(clock) then
+		if reset = '1' then
+			ready <= true;
+			valid <= false;
+			num <= num_scalar'high;
+			this_start <= false;
+			prev_start <= false;
+			okay  <= true;
+			dvalid  <= false;
+			buf_wren <= false;
+		elsif rising_edge(clock) then
 			valid <= dvalid;
 			oseq <= dseq;
 			omin <= dmin;
