@@ -8,7 +8,7 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
 #include "ldpc_scalar.hh"
 
-const int VECTOR_SCALARS = 90;
+const int VECTOR_SCALARS = 120;
 const int VECTOR_LOCATIONS_MAX = (TOTAL_LINKS_MAX+1) / VECTOR_SCALARS;
 const int CODE_VECTORS = CODE_SCALARS / VECTOR_SCALARS;
 const int BLOCK_VECTORS = BLOCK_SCALARS / VECTOR_SCALARS;
