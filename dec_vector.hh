@@ -33,21 +33,11 @@ void sub_vector(int *o, const int *a, const int *b)
 	for (int i = 0; i < VECTOR_SCALARS; ++i)
 		o[i] = clamp_scalar(a[i] - b[i], -VMAG_MAX, VMAG_MAX);
 }
-void dec_vector(int *output, const int *input)
+void dec_vector(int vars[][VECTOR_SCALARS])
 {
-	int vars[CODE_VECTORS][VECTOR_SCALARS];
-	int q = parities / BLOCK_VECTORS;
-	for (int i = 0; i < CODE_BLOCKS - q; ++i)
-		for (int j = 0; j < BLOCK_VECTORS; ++j)
-			for (int n = 0; n < VECTOR_SCALARS; ++n)
-				vars[BLOCK_VECTORS*i+j][n] = clamp_scalar(input[BLOCK_SCALARS*i+BLOCK_VECTORS*n+j], -VMAG_MAX, VMAG_MAX);
-	int R = parities * VECTOR_SCALARS;
-	int K = CODE_SCALARS - R;
-	int messages = CODE_VECTORS - parities;
-	for (int i = 0; i < q; ++i)
-		for (int j = 0; j < BLOCK_VECTORS; ++j)
-			for (int n = 0; n < VECTOR_SCALARS; ++n)
-				vars[messages+BLOCK_VECTORS*i+j][n] = clamp_scalar(input[K+q*(BLOCK_VECTORS*n+j)+i], -VMAG_MAX, VMAG_MAX);
+	for (int j = 0; j < CODE_VECTORS; ++j)
+		for (int n = 0; n < VECTOR_SCALARS; ++n)
+			vars[j][n] = clamp_scalar(vars[j][n], -VMAG_MAX, VMAG_MAX);
 	int wd_flags[VECTOR_LOCATIONS_MAX];
 	int bnls[VECTOR_LOCATIONS_MAX][VECTOR_SCALARS] = { { 0 } };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
@@ -103,13 +93,5 @@ void dec_vector(int *output, const int *input)
 			loc += cnt;
 		}
 	}
-	for (int i = 0; i < CODE_BLOCKS - q; ++i)
-		for (int j = 0; j < BLOCK_VECTORS; ++j)
-			for (int n = 0; n < VECTOR_SCALARS; ++n)
-				output[BLOCK_SCALARS*i+BLOCK_VECTORS*n+j] = vars[BLOCK_VECTORS*i+j][n];
-	for (int i = 0; i < q; ++i)
-		for (int j = 0; j < BLOCK_VECTORS; ++j)
-			for (int n = 0; n < VECTOR_SCALARS; ++n)
-				output[K+q*(BLOCK_VECTORS*n+j)+i] = vars[messages+BLOCK_VECTORS*i+j][n];
 }
 

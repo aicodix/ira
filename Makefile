@@ -77,7 +77,7 @@ work/dec_vector.o: dec_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/tab
 work/cnp_scalar_tb.o: cnp_scalar_tb.vhd work/ldpc_scalar.o work/cnp_scalar.o
 work/cnp_vector_tb.o: cnp_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/cnp_vector.o
 work/dec_scalar_tb.o: dec_scalar_tb.vhd work/ldpc_scalar.o work/dec_scalar.o
-work/dec_vector_tb.o: dec_vector_tb.vhd work/ldpc_scalar.o work/dec_vector.o
+work/dec_vector_tb.o: dec_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/dec_vector.o
 
 work/%.o: %.vhd | work
 	$(GHDL) -a --workdir=work $<

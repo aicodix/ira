@@ -6,7 +6,6 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
 #pragma once
 
-#include <iostream>
 #include "cnp_scalar.hh"
 
 int add_scalar(int a, int b)
@@ -17,15 +16,10 @@ int sub_scalar(int a, int b)
 {
 	return clamp_scalar(a - b, -VMAG_MAX, VMAG_MAX);
 }
-void dec_scalar(int *output, const int *input)
+void dec_scalar(int *vars)
 {
-	int vars[CODE_SCALARS];
-	int messages = CODE_SCALARS - BLOCK_SCALARS * parities;
-	for (int i = 0; i < messages; ++i)
-		vars[i] = clamp_scalar(input[i], -VMAG_MAX, VMAG_MAX);
-	for (int i = 0; i < parities; ++i)
-		for (int j = 0; j < BLOCK_SCALARS; ++j)
-			vars[messages+BLOCK_SCALARS*i+j] = clamp_scalar(input[messages+parities*j+i], -VMAG_MAX, VMAG_MAX);
+	for (int j = 0; j < CODE_SCALARS; ++j)
+		vars[j] = clamp_scalar(vars[j], -VMAG_MAX, VMAG_MAX);
 	int bnls[SCALAR_LOCATIONS_MAX] = { 0 };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
 		int loc = 0, blk = 0;
@@ -55,10 +49,5 @@ void dec_scalar(int *output, const int *input)
 			blk += cnt;
 		}
 	}
-	for (int i = 0; i < messages; ++i)
-		output[i] = vars[i];
-	for (int i = 0; i < parities; ++i)
-		for (int j = 0; j < BLOCK_SCALARS; ++j)
-			output[messages+parities*j+i] = vars[messages+BLOCK_SCALARS*i+j];
 }
 

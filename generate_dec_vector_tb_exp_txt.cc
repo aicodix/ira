@@ -27,13 +27,15 @@ int main()
 	std::ifstream soft_input("dec_vector_tb_inp.txt");
 	std::ofstream soft_output("dec_vector_tb_exp.txt");
 	while (soft_input.good()) {
-		int inp[CODE_SCALARS], out[CODE_SCALARS];
-		for (int j = 0; j < CODE_SCALARS; ++j)
-			if (!(soft_input >> inp[j]))
-				return 0;
-		dec_vector(out, inp);
-		for (int j = 0; j < CODE_SCALARS; ++j)
-			soft_output << '\t' << out[j];
+		int soft[CODE_VECTORS][VECTOR_SCALARS];
+		for (int j = 0; j < CODE_VECTORS; ++j)
+			for (int n = 0; n < VECTOR_SCALARS; ++n)
+				if (!(soft_input >> soft[j][n]))
+					return 0;
+		dec_vector(soft);
+		for (int j = 0; j < CODE_VECTORS; ++j)
+			for (int n = 0; n < VECTOR_SCALARS; ++n)
+				soft_output << '\t' << soft[j][n];
 		soft_output << std::endl;
 	}
 	return 0;
