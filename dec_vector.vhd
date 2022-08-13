@@ -14,18 +14,14 @@ entity dec_vector is
 		ready : out boolean := true;
 		istart : in boolean;
 		ostart : out boolean := false;
-		isoft : in soft_scalar;
-		osoft : out soft_scalar
+		isoft : in soft_vector;
+		osoft : out soft_vector
 	);
 end dec_vector;
 
 architecture rtl of dec_vector is
 	signal swap_cv : natural range 0 to code_vectors := code_vectors;
-	signal swap_vs : natural range 0 to vector_scalars := vector_scalars;
-	signal swap_bv : natural range 0 to block_vectors-1;
 	subtype vector_index is natural range 0 to vector_scalars-1;
-	type swap_vs_delays is array (1 to 2) of vector_index;
-	signal swap_vs_d : swap_vs_delays;
 	signal prev_vsft : vsft_scalar;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_vectors-1;
@@ -64,7 +60,6 @@ architecture rtl of dec_vector is
 	signal add_ivsft, add_ovsft : vsft_vector;
 	signal add_icsft : csft_vector;
 	signal ptys : vector_parities := init_vector_parities;
-	signal msgs : vector_messages := CODE_VECTORS - init_vector_parities;
 	signal inp_pty : natural range 0 to vector_parities_max;
 	signal prev_start : boolean := false;
 	type swap_start_delays is array (1 to 2) of boolean;
@@ -74,9 +69,6 @@ architecture rtl of dec_vector is
 	signal inp_stage : inp_stages := (others => false);
 	type swap_stages is array (0 to 3) of boolean;
 	signal swap_stage : swap_stages := (others => false);
-	type swap_soft_delays is array (1 to 2) of soft_scalar;
-	signal swap_soft_d : swap_soft_delays;
-	signal swap_pos, swap_dpos : natural range 0 to code_vectors-1;
 	subtype num_scalar is natural range 0 to degree_max;
 	signal inp_num : num_scalar := 0;
 	signal inp_cnt : count_scalar := degree_max;
@@ -189,81 +181,44 @@ begin
 		if rising_edge(clock) then
 			if istart then
 				swap_cv <= 0;
-				swap_bv <= 0;
-				swap_vs <= 0;
 				swap_start_d(1) <= prev_start;
 				prev_start <= istart;
 				swap_stage(0) <= true;
-			elsif swap_cv < msgs then
+			elsif swap_cv /= code_vectors then
 				swap_start_d(1) <= false;
-				if swap_bv = block_vectors-1 then
-					swap_bv <= 0;
-					if swap_vs = vector_scalars-1 then
-						swap_vs <= 0;
-						swap_cv <= swap_cv + block_vectors;
-					else
-						swap_vs <= swap_vs + 1;
-					end if;
-				else
-					swap_bv <= swap_bv + 1;
-				end if;
---				report "MSG" & HT & integer'image(swap_cv) & HT & integer'image(swap_bv) & HT & integer'image(swap_vs);
-			elsif swap_vs /= vector_scalars then
-				if swap_cv = code_vectors-block_vectors then
-					swap_cv <= msgs;
-					if swap_bv = block_vectors-1 then
-						swap_bv <= 0;
-						swap_vs <= swap_vs + 1;
-					else
-						swap_bv <= swap_bv + 1;
-					end if;
-				else
-					swap_cv <= swap_cv + block_vectors;
-				end if;
-				if swap_cv = code_vectors-2*block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
+				swap_cv <= swap_cv + 1;
+				if swap_cv = code_vectors-2 then
 					ready <= false;
 				end if;
-				if swap_cv = code_vectors-block_vectors and swap_bv = block_vectors-1 and swap_vs = vector_scalars-1 then
+				if swap_cv = code_vectors-1 then
 					swap_stage(0) <= false;
 				end if;
---				report "PTY" & HT & integer'image(swap_cv) & HT & integer'image(swap_bv) & HT & integer'image(swap_vs);
 			end if;
 
 			if swap_stage(0) then
-				swap_vs_d(1) <= swap_vs;
 				swap_start_d(2) <= swap_start_d(1);
-				swap_soft_d(1) <= isoft;
-				swap_pos <= swap_cv + swap_bv;
-				var_rpos <= swap_cv + swap_bv;
+				var_wren <= true;
+				var_isft <= soft_to_vsft(isoft);
+				var_wpos <= swap_cv;
+				var_rpos <= swap_cv;
 			end if;
 
 			swap_stage(1) <= swap_stage(0);
 			if swap_stage(1) then
-				swap_vs_d(2) <= swap_vs_d(1);
+				if not swap_stage(0) then
+					var_wren <= false;
+				end if;
 				ostart <= swap_start_d(2);
-				swap_soft_d(2) <= swap_soft_d(1);
-				swap_dpos <= swap_pos;
 			end if;
 
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
-				osoft <= vsft_to_soft(var_osft(swap_vs_d(2)));
-				var_wren <= true;
-				var_wpos <= swap_dpos;
-				for idx in soft_vector'range loop
-					if swap_vs_d(2) = idx then
-						var_isft(idx) <= soft_to_vsft(swap_soft_d(2));
-					else
-						var_isft(idx) <= var_osft(idx);
-					end if;
-				end loop;
+				osoft <= vsft_to_soft(var_osft);
 			end if;
 
 			swap_stage(3) <= swap_stage(2);
 			if swap_stage(3) and not swap_stage(2) then
-				var_wren <= false;
 				inp_stage(0) <= true;
---				ready <= true;
 			end if;
 
 			if inp_stage(0) then

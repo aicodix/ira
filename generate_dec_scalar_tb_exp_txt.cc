@@ -27,13 +27,13 @@ int main()
 	std::ifstream soft_input("dec_scalar_tb_inp.txt");
 	std::ofstream soft_output("dec_scalar_tb_exp.txt");
 	while (soft_input.good()) {
-		int inp[CODE_SCALARS], out[CODE_SCALARS];
+		int soft[CODE_SCALARS];
 		for (int j = 0; j < CODE_SCALARS; ++j)
-			if (!(soft_input >> inp[j]))
+			if (!(soft_input >> soft[j]))
 				return 0;
-		dec_scalar(out, inp);
+		dec_scalar(soft);
 		for (int j = 0; j < CODE_SCALARS; ++j)
-			soft_output << '\t' << out[j];
+			soft_output << '\t' << soft[j];
 		soft_output << std::endl;
 	}
 	return 0;

@@ -20,7 +20,6 @@ end dec_scalar;
 
 architecture rtl of dec_scalar is
 	signal swap_cs : natural range 0 to code_scalars := code_scalars;
-	signal swap_bs : natural range 0 to block_scalars := block_scalars;
 	signal var_wren, var_rden : boolean := false;
 	signal var_wpos, var_rpos : natural range 0 to code_scalars-1;
 	signal var_isft, var_osft : vsft_scalar;
@@ -52,7 +51,6 @@ architecture rtl of dec_scalar is
 	signal add_ivsft, add_ovsft : vsft_scalar;
 	signal add_icsft : csft_scalar;
 	signal pty_blocks : block_parities := init_block_parities;
-	signal msg_scalars : scalar_messages := BLOCK_SCALARS * (CODE_BLOCKS - init_block_parities);
 	signal inp_pty : natural range 0 to block_parities_max;
 	signal inp_bs : block_shift;
 	signal prev_start : boolean := false;
@@ -158,36 +156,26 @@ begin
 		if rising_edge(clock) then
 			if istart then
 				swap_cs <= 0;
-				swap_bs <= 0;
 				swap_start_d(1) <= prev_start;
 				prev_start <= istart;
 				swap_stage(0) <= true;
-			elsif swap_cs < msg_scalars then
+			elsif swap_cs /= code_scalars then
 				swap_start_d(1) <= false;
 				swap_cs <= swap_cs + 1;
---				report "MSG" & HT & integer'image(swap_cs) & HT & integer'image(swap_bs);
-			elsif swap_bs /= block_scalars then
-				if swap_cs = code_scalars-block_scalars then
-					swap_cs <= msg_scalars;
-					swap_bs <= swap_bs + 1;
-				else
-					swap_cs <= swap_cs + block_scalars;
-				end if;
-				if swap_cs = code_scalars-2*block_scalars and swap_bs = block_scalars-1 then
+				if swap_cs = code_scalars-2 then
 					ready <= false;
 				end if;
-				if swap_cs = code_scalars-block_scalars and swap_bs = block_scalars-1 then
+				if swap_cs = code_scalars-1 then
 					swap_stage(0) <= false;
 				end if;
---				report "PTY" & HT & integer'image(swap_cs) & HT & integer'image(swap_bs);
 			end if;
 
 			if swap_stage(0) then
 				swap_start_d(2) <= swap_start_d(1);
 				var_wren <= true;
 				var_isft <= soft_to_vsft(isoft);
-				var_wpos <= swap_cs + swap_bs;
-				var_rpos <= swap_cs + swap_bs;
+				var_wpos <= swap_cs;
+				var_rpos <= swap_cs;
 			end if;
 
 			swap_stage(1) <= swap_stage(0);
@@ -206,7 +194,6 @@ begin
 			swap_stage(3) <= swap_stage(2);
 			if swap_stage(3) and not swap_stage(2) then
 				inp_stage(0) <= true;
---				ready <= true;
 			end if;
 
 			if inp_stage(0) then
