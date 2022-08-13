@@ -26,12 +26,12 @@ void rot_vector(int *output, const int *input, int shift)
 void add_vector(int *o, const int *a, const int *b)
 {
 	for (int i = 0; i < VECTOR_SCALARS; ++i)
-		o[i] = min_scalar(max_scalar(a[i] + b[i], -VMAG_MAX), VMAG_MAX);
+		o[i] = clamp_scalar(a[i] + b[i], -VMAG_MAX, VMAG_MAX);
 }
 void sub_vector(int *o, const int *a, const int *b)
 {
 	for (int i = 0; i < VECTOR_SCALARS; ++i)
-		o[i] = min_scalar(max_scalar(a[i] - b[i], -VMAG_MAX), VMAG_MAX);
+		o[i] = clamp_scalar(a[i] - b[i], -VMAG_MAX, VMAG_MAX);
 }
 void dec_vector(int *output, const int *input)
 {
@@ -40,14 +40,14 @@ void dec_vector(int *output, const int *input)
 	for (int i = 0; i < CODE_BLOCKS - q; ++i)
 		for (int j = 0; j < BLOCK_VECTORS; ++j)
 			for (int n = 0; n < VECTOR_SCALARS; ++n)
-				vars[BLOCK_VECTORS*i+j][n] = min_scalar(max_scalar(input[BLOCK_SCALARS*i+BLOCK_VECTORS*n+j], -VMAG_MAX), VMAG_MAX);
+				vars[BLOCK_VECTORS*i+j][n] = clamp_scalar(input[BLOCK_SCALARS*i+BLOCK_VECTORS*n+j], -VMAG_MAX, VMAG_MAX);
 	int R = parities * VECTOR_SCALARS;
 	int K = CODE_SCALARS - R;
 	int messages = CODE_VECTORS - parities;
 	for (int i = 0; i < q; ++i)
 		for (int j = 0; j < BLOCK_VECTORS; ++j)
 			for (int n = 0; n < VECTOR_SCALARS; ++n)
-				vars[messages+BLOCK_VECTORS*i+j][n] = min_scalar(max_scalar(input[K+q*(BLOCK_VECTORS*n+j)+i], -VMAG_MAX), VMAG_MAX);
+				vars[messages+BLOCK_VECTORS*i+j][n] = clamp_scalar(input[K+q*(BLOCK_VECTORS*n+j)+i], -VMAG_MAX, VMAG_MAX);
 	int wd_flags[VECTOR_LOCATIONS_MAX];
 	int bnls[VECTOR_LOCATIONS_MAX][VECTOR_SCALARS] = { { 0 } };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {

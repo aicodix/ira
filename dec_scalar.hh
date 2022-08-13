@@ -11,21 +11,21 @@ Copyright 2019 Ahmet Inan <inan@aicodix.de>
 
 int add_scalar(int a, int b)
 {
-	return min_scalar(max_scalar(a + b, -VMAG_MAX), VMAG_MAX);
+	return clamp_scalar(a + b, -VMAG_MAX, VMAG_MAX);
 }
 int sub_scalar(int a, int b)
 {
-	return min_scalar(max_scalar(a - b, -VMAG_MAX), VMAG_MAX);
+	return clamp_scalar(a - b, -VMAG_MAX, VMAG_MAX);
 }
 void dec_scalar(int *output, const int *input)
 {
 	int vars[CODE_SCALARS];
 	int messages = CODE_SCALARS - BLOCK_SCALARS * parities;
 	for (int i = 0; i < messages; ++i)
-		vars[i] = min_scalar(max_scalar(input[i], -VMAG_MAX), VMAG_MAX);
+		vars[i] = clamp_scalar(input[i], -VMAG_MAX, VMAG_MAX);
 	for (int i = 0; i < parities; ++i)
 		for (int j = 0; j < BLOCK_SCALARS; ++j)
-			vars[messages+BLOCK_SCALARS*i+j] = min_scalar(max_scalar(input[messages+parities*j+i], -VMAG_MAX), VMAG_MAX);
+			vars[messages+BLOCK_SCALARS*i+j] = clamp_scalar(input[messages+parities*j+i], -VMAG_MAX, VMAG_MAX);
 	int bnls[SCALAR_LOCATIONS_MAX] = { 0 };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
 		int loc = 0, blk = 0;
