@@ -32,6 +32,14 @@ int max_scalar(int a, int b)
 		return a;
 	return b;
 }
+int clamp_scalar(int x, int a, int b)
+{
+	if (x < a)
+		return a;
+	if (x > b)
+		return b;
+	return x;
+}
 int mul_scalar(int a, int b)
 {
 	return a * b;
@@ -44,7 +52,7 @@ void cnp_scalar(int *output, const int *input, const int *prev, int cnt, int bet
 {
 	int imags[cnt];
 	for (int i = 0; i < cnt; ++i)
-		imags[i] = min_scalar(max_scalar(abs_scalar(input[i]) - beta, 0), CMAG_MAX);
+		imags[i] = clamp_scalar(abs_scalar(input[i]) - beta, 0, CMAG_MAX);
 
 	int omags[cnt];
 	CODE::exclusive_reduce(imags, omags, cnt, min_scalar);
