@@ -2,10 +2,10 @@
 GHDL = ghdl
 
 .PHONY: vector
-vector: cnp_vector_tb_exp.txt dec_vector_tb_exp.txt cnp_vector_tb_out.txt dec_vector_tb_out.txt
+vector: cnp_vector_tb_exp.txt sin_vector_tb_exp.txt sde_vector_tb_exp.txt dec_vector_tb_exp.txt cnp_vector_tb_out.txt dec_vector_tb_out.txt
 
 .PHONY: scalar
-scalar: cnp_scalar_tb_exp.txt dec_scalar_tb_exp.txt cnp_scalar_tb_out.txt dec_scalar_tb_out.txt
+scalar: cnp_scalar_tb_exp.txt sin_scalar_tb_exp.txt sde_scalar_tb_exp.txt dec_scalar_tb_exp.txt cnp_scalar_tb_out.txt dec_scalar_tb_out.txt
 
 .PHONY: all
 all: scalar vector
@@ -94,10 +94,18 @@ work/check_table_scalar_txt: check_table_scalar_txt.cc ldpc_scalar.hh
 work/check_table_vector_txt: check_table_vector_txt.cc ldpc_scalar.hh ldpc_vector.hh
 work/generate_cnp_scalar_tb_inp_txt: generate_cnp_scalar_tb_inp_txt.cc ldpc_scalar.hh
 work/generate_cnp_vector_tb_inp_txt: generate_cnp_vector_tb_inp_txt.cc ldpc_scalar.hh ldpc_vector.hh
+work/generate_sin_scalar_tb_inp_txt: generate_sin_scalar_tb_inp_txt.cc ldpc_scalar.hh
+work/generate_sin_vector_tb_inp_txt: generate_sin_vector_tb_inp_txt.cc ldpc_scalar.hh ldpc_vector.hh
+work/generate_sde_scalar_tb_inp_txt: generate_sde_scalar_tb_inp_txt.cc ldpc_scalar.hh
+work/generate_sde_vector_tb_inp_txt: generate_sde_vector_tb_inp_txt.cc ldpc_scalar.hh ldpc_vector.hh
 work/generate_dec_scalar_tb_inp_txt: generate_dec_scalar_tb_inp_txt.cc ldpc_scalar.hh
 work/generate_dec_vector_tb_inp_txt: generate_dec_vector_tb_inp_txt.cc ldpc_scalar.hh ldpc_vector.hh
 work/generate_cnp_scalar_tb_exp_txt: generate_cnp_scalar_tb_exp_txt.cc ldpc_scalar.hh cnp_scalar.hh exclusive_reduce.hh
 work/generate_cnp_vector_tb_exp_txt: generate_cnp_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh cnp_scalar.hh cnp_vector.hh exclusive_reduce.hh
+work/generate_sin_scalar_tb_exp_txt: generate_sin_scalar_tb_exp_txt.cc ldpc_scalar.hh sde_scalar.hh
+work/generate_sin_vector_tb_exp_txt: generate_sin_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh sin_vector.hh
+work/generate_sde_scalar_tb_exp_txt: generate_sde_scalar_tb_exp_txt.cc ldpc_scalar.hh sde_scalar.hh
+work/generate_sde_vector_tb_exp_txt: generate_sde_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh sde_vector.hh
 work/generate_dec_scalar_tb_exp_txt: generate_dec_scalar_tb_exp_txt.cc ldpc_scalar.hh dec_scalar.hh cnp_scalar.hh exclusive_reduce.hh
 work/generate_dec_vector_tb_exp_txt: generate_dec_vector_tb_exp_txt.cc ldpc_scalar.hh ldpc_vector.hh dec_vector.hh cnp_scalar.hh cnp_vector.hh exclusive_reduce.hh
 work/generate_table_scalar_vhd: generate_table_scalar_vhd.cc ldpc_scalar.hh
@@ -118,11 +126,35 @@ cnp_scalar_tb_exp.txt: cnp_scalar_tb_inp.txt work/generate_cnp_scalar_tb_exp_txt
 cnp_vector_tb_exp.txt: cnp_vector_tb_inp.txt work/generate_cnp_vector_tb_exp_txt
 	work/generate_cnp_vector_tb_exp_txt
 
+sin_scalar_tb_inp.txt: work/generate_sin_scalar_tb_inp_txt
+	work/generate_sin_scalar_tb_inp_txt
+
+sin_vector_tb_inp.txt: work/generate_sin_vector_tb_inp_txt
+	work/generate_sin_vector_tb_inp_txt
+
+sde_scalar_tb_inp.txt: work/generate_sde_scalar_tb_inp_txt
+	work/generate_sde_scalar_tb_inp_txt
+
+sde_vector_tb_inp.txt: work/generate_sde_vector_tb_inp_txt
+	work/generate_sde_vector_tb_inp_txt
+
 dec_scalar_tb_inp.txt: work/generate_dec_scalar_tb_inp_txt
 	work/generate_dec_scalar_tb_inp_txt
 
 dec_vector_tb_inp.txt: work/generate_dec_vector_tb_inp_txt
 	work/generate_dec_vector_tb_inp_txt
+
+sin_scalar_tb_exp.txt: sin_scalar_tb_inp.txt table_scalar.txt work/generate_sin_scalar_tb_exp_txt
+	work/generate_sin_scalar_tb_exp_txt
+
+sin_vector_tb_exp.txt: sin_vector_tb_inp.txt table_vector.txt work/generate_sin_vector_tb_exp_txt
+	work/generate_sin_vector_tb_exp_txt
+
+sde_scalar_tb_exp.txt: sde_scalar_tb_inp.txt table_scalar.txt work/generate_sde_scalar_tb_exp_txt
+	work/generate_sde_scalar_tb_exp_txt
+
+sde_vector_tb_exp.txt: sde_vector_tb_inp.txt table_vector.txt work/generate_sde_vector_tb_exp_txt
+	work/generate_sde_vector_tb_exp_txt
 
 dec_scalar_tb_exp.txt: dec_scalar_tb_inp.txt table_scalar.txt work/generate_dec_scalar_tb_exp_txt
 	work/generate_dec_scalar_tb_exp_txt
