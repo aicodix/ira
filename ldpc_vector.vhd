@@ -5,7 +5,7 @@
 use work.ldpc_scalar.all;
 
 package ldpc_vector is
-	constant vector_scalars : positive := 15;
+	constant vector_scalars : positive := 120;
 	constant code_vectors : positive := code_scalars / vector_scalars;
 	constant block_vectors : positive := block_scalars / vector_scalars;
 	constant vector_locations_max : positive := (total_links_max+1) / vector_scalars;
