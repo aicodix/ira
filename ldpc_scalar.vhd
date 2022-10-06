@@ -154,7 +154,7 @@ package body ldpc_scalar is
 		if prv.mag = 0 or prv.sgn = nxt.sgn then
 			return nxt;
 		else
-			return (false, 0);
+			return (nxt.sgn, 0);
 		end if;
 	end function;
 end package body;
