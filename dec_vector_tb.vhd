@@ -18,8 +18,8 @@ architecture behavioral of dec_vector_tb is
 	signal dec_ready : boolean;
 	signal dec_istart : boolean := false;
 	signal dec_ostart : boolean;
-	signal dec_isoft : soft_vector := (others => 0);
-	signal dec_osoft : soft_vector;
+	signal dec_isoft : vsft_vector := soft_to_vsft((others => 0));
+	signal dec_osoft : vsft_vector;
 begin
 	dec_inst : entity work.dec_vector
 		port map (clock, dec_ready,
@@ -100,7 +100,7 @@ begin
 						read(buf, val(idx));
 					end loop;
 				end if;
-				dec_isoft <= val;
+				dec_isoft <= soft_to_vsft(val);
 			end if;
 			if pos = code_vectors then
 				if not eof then
@@ -127,7 +127,7 @@ begin
 			if dec_ostart then
 				pos := 0;
 			elsif pos < code_vectors then
-				val := dec_osoft;
+				val := vsft_to_soft(dec_osoft);
 				for idx in val'range loop
 					write(buf, HT);
 					write(buf, val(idx));

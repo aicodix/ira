@@ -17,8 +17,8 @@ architecture behavioral of dec_scalar_tb is
 	signal dec_ready : boolean;
 	signal dec_istart : boolean := false;
 	signal dec_ostart : boolean;
-	signal dec_isoft : soft_scalar := 0;
-	signal dec_osoft : soft_scalar;
+	signal dec_isoft : vsft_scalar := soft_to_vsft(0);
+	signal dec_osoft : vsft_scalar;
 begin
 	dec_inst : entity work.dec_scalar
 		port map (clock, dec_ready,
@@ -97,7 +97,7 @@ begin
 				else
 					read(buf, val);
 				end if;
-				dec_isoft <= val;
+				dec_isoft <= soft_to_vsft(val);
 			end if;
 			if pos = code_scalars then
 				if not eof then
@@ -124,7 +124,7 @@ begin
 			if dec_ostart then
 				pos := 0;
 			elsif pos < code_scalars then
-				val := dec_osoft;
+				val := vsft_to_soft(dec_osoft);
 				write(buf, HT);
 				write(buf, val);
 				pos := pos + 1;

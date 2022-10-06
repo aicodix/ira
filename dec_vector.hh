@@ -35,9 +35,6 @@ void sub_vector(int *o, const int *a, const int *b)
 }
 void dec_vector(int vars[][VECTOR_SCALARS])
 {
-	for (int j = 0; j < CODE_VECTORS; ++j)
-		for (int n = 0; n < VECTOR_SCALARS; ++n)
-			vars[j][n] = clamp_scalar(vars[j][n], -VMAG_MAX, VMAG_MAX);
 	int wd_flags[VECTOR_LOCATIONS_MAX];
 	int bnls[VECTOR_LOCATIONS_MAX][VECTOR_SCALARS] = { { 0 } };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {

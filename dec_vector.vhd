@@ -14,8 +14,8 @@ entity dec_vector is
 		ready : out boolean := true;
 		istart : in boolean;
 		ostart : out boolean := false;
-		isoft : in soft_vector;
-		osoft : out soft_vector
+		isoft : in vsft_vector;
+		osoft : out vsft_vector
 	);
 end dec_vector;
 
@@ -198,7 +198,7 @@ begin
 			if swap_stage(0) then
 				swap_start_d(2) <= swap_start_d(1);
 				var_wren <= true;
-				var_isft <= soft_to_vsft(isoft);
+				var_isft <= isoft;
 				var_wpos <= swap_cv;
 				var_rpos <= swap_cv;
 			end if;
@@ -213,7 +213,7 @@ begin
 
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
-				osoft <= vsft_to_soft(var_osft);
+				osoft <= var_osft;
 			end if;
 
 			swap_stage(3) <= swap_stage(2);

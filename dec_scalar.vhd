@@ -13,8 +13,8 @@ entity dec_scalar is
 		ready : out boolean := true;
 		istart : in boolean;
 		ostart : out boolean := false;
-		isoft : in soft_scalar;
-		osoft : out soft_scalar
+		isoft : in vsft_scalar;
+		osoft : out vsft_scalar
 	);
 end dec_scalar;
 
@@ -173,7 +173,7 @@ begin
 			if swap_stage(0) then
 				swap_start_d(2) <= swap_start_d(1);
 				var_wren <= true;
-				var_isft <= soft_to_vsft(isoft);
+				var_isft <= isoft;
 				var_wpos <= swap_cs;
 				var_rpos <= swap_cs;
 			end if;
@@ -188,7 +188,7 @@ begin
 
 			swap_stage(2) <= swap_stage(1);
 			if swap_stage(2) then
-				osoft <= vsft_to_soft(var_osft);
+				osoft <= var_osft;
 			end if;
 
 			swap_stage(3) <= swap_stage(2);

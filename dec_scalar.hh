@@ -18,8 +18,6 @@ int sub_scalar(int a, int b)
 }
 void dec_scalar(int *vars)
 {
-	for (int j = 0; j < CODE_SCALARS; ++j)
-		vars[j] = clamp_scalar(vars[j], -VMAG_MAX, VMAG_MAX);
 	int bnls[SCALAR_LOCATIONS_MAX] = { 0 };
 	for (int seq = 0; seq < ITERATIONS_MAX; ++seq) {
 		int loc = 0, blk = 0;
