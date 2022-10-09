@@ -39,6 +39,7 @@ package ldpc_vector is
 	function select_other (mag : cmag_vector; min : two_min_vector) return cmag_vector;
 	function two_min (mag : cmag_vector; min : two_min_vector) return two_min_vector;
 	function self_corr (prv, nxt : csft_vector) return csft_vector;
+	function index_to_mask (enable : boolean; index : vector_shift) return bool_vector;
 end package;
 
 package body ldpc_vector is
@@ -137,6 +138,15 @@ package body ldpc_vector is
 	begin
 		for idx in csft_vector'range loop
 			tmp(idx) := self_corr(prv(idx), nxt(idx));
+		end loop;
+		return tmp;
+	end function;
+
+	function index_to_mask (enable : boolean; index : vector_shift) return bool_vector is
+		variable tmp : bool_vector;
+	begin
+		for idx in tmp'range loop
+			tmp(idx) := enable and idx = index;
 		end loop;
 		return tmp;
 	end function;

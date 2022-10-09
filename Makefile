@@ -2,16 +2,16 @@
 GHDL = ghdl
 
 .PHONY: vector
-vector: cnp_vector_tb_exp.txt sin_vector_tb_exp.txt sde_vector_tb_exp.txt dec_vector_tb_exp.txt cnp_vector_tb_out.txt dec_vector_tb_out.txt
+vector: cnp_vector_tb_exp.txt sin_vector_tb_exp.txt sde_vector_tb_exp.txt dec_vector_tb_exp.txt cnp_vector_tb_out.txt sin_vector_tb_out.txt sde_vector_tb_out.txt dec_vector_tb_out.txt
 
 .PHONY: scalar
-scalar: cnp_scalar_tb_exp.txt sin_scalar_tb_exp.txt sde_scalar_tb_exp.txt dec_scalar_tb_exp.txt cnp_scalar_tb_out.txt dec_scalar_tb_out.txt
+scalar: cnp_scalar_tb_exp.txt sin_scalar_tb_exp.txt sde_scalar_tb_exp.txt dec_scalar_tb_exp.txt cnp_scalar_tb_out.txt sin_scalar_tb_out.txt sde_scalar_tb_out.txt dec_scalar_tb_out.txt
 
 .PHONY: all
 all: scalar vector
 
 .PHONY: vcd
-vcd: cnp_scalar_tb.vcd dec_scalar_tb.vcd
+vcd: cnp_scalar_tb.vcd sin_scalar_tb.vcd sde_scalar_tb.vcd dec_scalar_tb.vcd
 
 .PRECIOUS: cnp_scalar_tb_out.txt
 cnp_scalar_tb_out.txt: cnp_scalar_tb cnp_scalar_tb_inp.txt cnp_scalar_tb_exp.txt
@@ -22,6 +22,26 @@ cnp_scalar_tb_out.txt: cnp_scalar_tb cnp_scalar_tb_inp.txt cnp_scalar_tb_exp.txt
 cnp_vector_tb_out.txt: cnp_vector_tb cnp_vector_tb_inp.txt cnp_vector_tb_exp.txt
 	$(GHDL) -r --workdir=work $<
 	diff -q -s cnp_vector_tb_out.txt cnp_vector_tb_exp.txt
+
+.PRECIOUS: sin_scalar_tb_out.txt
+sin_scalar_tb_out.txt: sin_scalar_tb sin_scalar_tb_inp.txt sin_scalar_tb_exp.txt
+	$(GHDL) -r --workdir=work $<
+	diff -q -s sin_scalar_tb_out.txt sin_scalar_tb_exp.txt
+
+.PRECIOUS: sin_vector_tb_out.txt
+sin_vector_tb_out.txt: sin_vector_tb sin_vector_tb_inp.txt sin_vector_tb_exp.txt
+	$(GHDL) -r --workdir=work $<
+	diff -q -s sin_vector_tb_out.txt sin_vector_tb_exp.txt
+
+.PRECIOUS: sde_scalar_tb_out.txt
+sde_scalar_tb_out.txt: sde_scalar_tb sde_scalar_tb_inp.txt sde_scalar_tb_exp.txt
+	$(GHDL) -r --workdir=work $<
+	diff -q -s sde_scalar_tb_out.txt sde_scalar_tb_exp.txt
+
+.PRECIOUS: sde_vector_tb_out.txt
+sde_vector_tb_out.txt: sde_vector_tb sde_vector_tb_inp.txt sde_vector_tb_exp.txt
+	$(GHDL) -r --workdir=work $<
+	diff -q -s sde_vector_tb_out.txt sde_vector_tb_exp.txt
 
 .PRECIOUS: dec_scalar_tb_out.txt
 dec_scalar_tb_out.txt: dec_scalar_tb dec_scalar_tb_inp.txt dec_scalar_tb_exp.txt
@@ -39,6 +59,22 @@ cnp_scalar_tb.vcd: cnp_scalar_tb cnp_scalar_tb_inp.txt
 
 .PRECIOUS: cnp_vector_tb.vcd
 cnp_vector_tb.vcd: cnp_vector_tb cnp_vector_tb_inp.txt
+	$(GHDL) -r --workdir=work $< --vcd=$@
+
+.PRECIOUS: sin_scalar_tb.vcd
+sin_scalar_tb.vcd: sin_scalar_tb sin_scalar_tb_inp.txt
+	$(GHDL) -r --workdir=work $< --vcd=$@
+
+.PRECIOUS: sin_vector_tb.vcd
+sin_vector_tb.vcd: sin_vector_tb sin_vector_tb_inp.txt
+	$(GHDL) -r --workdir=work $< --vcd=$@
+
+.PRECIOUS: sde_scalar_tb.vcd
+sde_scalar_tb.vcd: sde_scalar_tb sde_scalar_tb_inp.txt
+	$(GHDL) -r --workdir=work $< --vcd=$@
+
+.PRECIOUS: sde_vector_tb.vcd
+sde_vector_tb.vcd: sde_vector_tb sde_vector_tb_inp.txt
 	$(GHDL) -r --workdir=work $< --vcd=$@
 
 .PRECIOUS: dec_scalar_tb.vcd
@@ -72,10 +108,20 @@ work/var_vector.o: var_vector.vhd work/ldpc_vector.o work/var_scalar.o
 work/wdf_vector.o: wdf_vector.vhd work/ldpc_vector.o
 work/cnp_scalar.o: cnp_scalar.vhd work/ldpc_scalar.o work/buf_scalar.o
 work/cnp_vector.o: cnp_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/buf_vector.o
+work/itl_scalar.o: itl_scalar.vhd work/ldpc_scalar.o
+work/itl_vector.o: itl_vector.vhd work/ldpc_vector.o
+work/sin_scalar.o: sin_scalar.vhd work/ldpc_scalar.o work/table_scalar.o work/var_scalar.o work/itl_scalar.o
+work/sin_vector.o: sin_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/table_vector.o work/var_scalar.o work/itl_vector.o
+work/sde_scalar.o: sde_scalar.vhd work/ldpc_scalar.o work/table_scalar.o work/var_scalar.o work/itl_scalar.o
+work/sde_vector.o: sde_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/table_vector.o work/var_scalar.o work/itl_vector.o
 work/dec_scalar.o: dec_scalar.vhd work/ldpc_scalar.o work/table_scalar.o work/loc_scalar.o work/var_scalar.o work/cnt_scalar.o work/bnl_scalar.o work/cnp_scalar.o work/add_scalar.o work/off_scalar.o
 work/dec_vector.o: dec_vector.vhd work/ldpc_scalar.o work/ldpc_vector.o work/table_vector.o work/loc_vector.o work/wdf_vector.o work/var_vector.o work/cnt_vector.o work/bnl_vector.o work/cnp_vector.o work/rol_vector.o work/ror_vector.o work/add_vector.o work/add_vector.o
 work/cnp_scalar_tb.o: cnp_scalar_tb.vhd work/ldpc_scalar.o work/cnp_scalar.o
 work/cnp_vector_tb.o: cnp_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/cnp_vector.o
+work/sin_scalar_tb.o: sin_scalar_tb.vhd work/ldpc_scalar.o work/sin_scalar.o
+work/sin_vector_tb.o: sin_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/sin_vector.o
+work/sde_scalar_tb.o: sde_scalar_tb.vhd work/ldpc_scalar.o work/sde_scalar.o
+work/sde_vector_tb.o: sde_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/sde_vector.o
 work/dec_scalar_tb.o: dec_scalar_tb.vhd work/ldpc_scalar.o work/dec_scalar.o
 work/dec_vector_tb.o: dec_vector_tb.vhd work/ldpc_scalar.o work/ldpc_vector.o work/dec_vector.o
 
@@ -84,6 +130,10 @@ work/%.o: %.vhd | work
 
 cnp_scalar_tb: work/cnp_scalar_tb.o
 cnp_vector_tb: work/cnp_vector_tb.o
+sin_scalar_tb: work/sin_scalar_tb.o
+sin_vector_tb: work/sin_vector_tb.o
+sde_scalar_tb: work/sde_scalar_tb.o
+sde_vector_tb: work/sde_vector_tb.o
 dec_scalar_tb: work/dec_scalar_tb.o
 dec_vector_tb: work/dec_vector_tb.o
 
