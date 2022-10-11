@@ -9,7 +9,8 @@ use work.ldpc_vector.all;
 entity itl_vector is
 	port (
 		clock : in std_logic;
-		start : in boolean;
+		reset : in boolean;
+		clken : in boolean;
 		ptys : in vector_parities;
 		pos : out vector_offset;
 		idx : out vector_shift;
@@ -20,9 +21,9 @@ end itl_vector;
 
 architecture rtl of itl_vector is
 	signal msgs : vector_messages;
-	signal cv : natural range 0 to code_vectors-block_vectors := code_vectors-block_vectors;
-	signal bv : natural range 0 to block_vectors-1 := block_vectors-1;
-	signal vs : vector_shift := vector_scalars-1;
+	signal cv : natural range 0 to code_vectors-block_vectors := 0;
+	signal bv : natural range 0 to block_vectors-1 := 0;
+	signal vs : vector_shift := 0;
 begin
 	pos <= cv + bv;
 	idx <= vs;
@@ -32,39 +33,46 @@ begin
 	process (clock)
 	begin
 		if rising_edge(clock) then
-			if start then
+			if reset then
 				cv <= 0;
 				bv <= 0;
 				vs <= 0;
-				msgs <= CODE_VECTORS - ptys;
-			elsif cv < msgs then
-				if bv = block_vectors-1 then
-					bv <= 0;
-					if vs = vector_scalars-1 then
-						vs <= 0;
-						cv <= cv + block_vectors;
-					else
-						vs <= vs + 1;
-					end if;
-				else
-					bv <= bv + 1;
-				end if;
---				report "MSG" & HT & integer'image(cv) & HT & integer'image(bv) & HT & integer'image(vs);
-			elsif not (cv = code_vectors-block_vectors and bv = block_vectors-1 and vs = vector_scalars-1) then
-				if cv = code_vectors-block_vectors then
-					cv <= msgs;
+			elsif clken then
+				if cv < msgs then
 					if bv = block_vectors-1 then
 						bv <= 0;
-						if vs /= vector_scalars-1 then
+						if vs = vector_scalars-1 then
+							vs <= 0;
+							cv <= cv + block_vectors;
+						else
 							vs <= vs + 1;
 						end if;
 					else
 						bv <= bv + 1;
 					end if;
+					if cv = 0 then
+						msgs <= CODE_VECTORS - ptys;
+					end if;
+--					report "MSG" & HT & integer'image(cv) & HT & integer'image(bv) & HT & integer'image(vs);
 				else
-					cv <= cv + block_vectors;
+					if cv = code_vectors-block_vectors then
+						cv <= msgs;
+						if bv = block_vectors-1 then
+							bv <= 0;
+							if vs = vector_scalars-1 then
+								vs <= 0;
+								cv <= 0;
+							else
+								vs <= vs + 1;
+							end if;
+						else
+							bv <= bv + 1;
+						end if;
+					else
+						cv <= cv + block_vectors;
+					end if;
+--					report "PTY" & HT & integer'image(cv) & HT & integer'image(bv) & HT & integer'image(vs);
 				end if;
---				report "PTY" & HT & integer'image(cv) & HT & integer'image(bv) & HT & integer'image(vs);
 			end if;
 		end if;
 	end process;
