@@ -4,6 +4,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.ldpc_scalar.all;
 use work.ldpc_vector.all;
 
 entity ror_vector is
@@ -18,16 +20,22 @@ end ror_vector;
 
 architecture rtl of ror_vector is
 	function rotate_right (vec : vsft_vector; shi : natural range 0 to vsft_vector'length-1) return vsft_vector is
-		variable tmp : vsft_vector;
+		constant len : positive := vsft_vector'length;
+		constant stages : positive := depth_to_width(len);
+		variable rotate : std_logic_vector(stages-1 downto 0);
+		type tmp_type is array (natural range 0 to stages) of vsft_vector;
+		variable tmp : tmp_type;
 	begin
-		for o in vsft_vector'range loop
-			for i in vsft_vector'range loop
-				if shi = (o - i + soft_vector'length) rem soft_vector'length then
-					tmp(o) := vec(i);
-				end if;
-			end loop;
+		rotate := std_logic_vector(to_unsigned(shi, stages));
+		tmp(0) := vec;
+		for i in 0 to stages-1 loop
+			if rotate(i) = '0' then
+				tmp(i+1) := tmp(i);
+			else
+				tmp(i+1) := tmp(i)(len-2**i to len-1) & tmp(i)(0 to len-2**i-1);
+			end if;
 		end loop;
-		return tmp;
+		return tmp(tmp'high);
 	end function;
 begin
 	process (clock)

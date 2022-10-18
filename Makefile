@@ -65,8 +65,8 @@ work/fub_scalar.o: fub_scalar.vhd work/ldpc_scalar.o
 work/buf_vector.o: buf_vector.vhd work/ldpc_vector.o work/ldpc_scalar.o work/fub_scalar.o
 work/loc_scalar.o: loc_scalar.vhd work/ldpc_scalar.o work/table_scalar.o
 work/loc_vector.o: loc_vector.vhd work/ldpc_vector.o work/table_vector.o
-work/rol_vector.o: rol_vector.vhd work/ldpc_vector.o
-work/ror_vector.o: ror_vector.vhd work/ldpc_vector.o
+work/rol_vector.o: rol_vector.vhd work/ldpc_vector.o work/ldpc_scalar.o
+work/ror_vector.o: ror_vector.vhd work/ldpc_vector.o work/ldpc_scalar.o
 work/var_scalar.o: var_scalar.vhd work/ldpc_scalar.o
 work/var_vector.o: var_vector.vhd work/ldpc_vector.o work/var_scalar.o
 work/wdf_vector.o: wdf_vector.vhd work/ldpc_vector.o
