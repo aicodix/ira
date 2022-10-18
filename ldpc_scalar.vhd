@@ -47,6 +47,7 @@ package ldpc_scalar is
 	type two_min_scalar is record
 		lo, hi : cmag_scalar;
 	end record;
+	function depth_to_width (val : natural) return natural;
 	function soft_to_vsft (val : soft_scalar) return vsft_scalar;
 	function soft_to_csft (val : soft_scalar) return csft_scalar;
 	function csft_to_soft (val : csft_scalar) return soft_scalar;
@@ -58,6 +59,18 @@ package ldpc_scalar is
 end package;
 
 package body ldpc_scalar is
+	function depth_to_width (val : natural) return natural is
+		variable tmp : natural := val - 1;
+		variable cnt : natural := 0;
+	begin
+		while tmp > 0 loop
+			cnt := cnt + 1;
+			tmp := tmp / 2;
+		end loop;
+		-- report "DEPTH: " & integer'image(val) & " WIDTH: " & integer'image(cnt);
+		return cnt;
+	end function;
+
 	function soft_to_vsft (val : soft_scalar) return vsft_scalar is
 		variable tmp : vsft_scalar;
 	begin
